@@ -1,4 +1,5 @@
 ﻿#include "easytable.h"
+#include <QtAlgorithms>
 #include <QTableWidget>
 #include <QFile>
 #include <QMessageBox>
@@ -11,29 +12,31 @@
 EasyTable::EasyTable(QWidget *parent) :
     QTableWidget(parent)
 {
-    autoRecalc=true;
-
+    autoRecalc = true;
+    RowCount = 199;
+    ColumnCount = 20;
     setItemPrototype(new Cell);
     setSelectionMode(ContiguousSelection);
-
     connect(this,SIGNAL(itemChanged(QTableWidgetItem*)),
             this,SLOT(somethingChanged()));
     clear();
 }
-
+void EasyTable::resetHeaderItem()
+{
+    for(int i = 0;i<ColumnCount;i++)
+    {
+        QTableWidgetItem *item=new QTableWidgetItem;
+        item->setText(QString(QChar('A'+i)));
+        setHorizontalHeaderItem(i,item);
+    }
+}
 void EasyTable::clear()
 {
     setRowCount(0);
     setColumnCount(0);
     setRowCount(RowCount);
     setColumnCount(ColumnCount);
-
-    for(int i=0;i<ColumnCount;i++)
-    {
-        QTableWidgetItem *item=new QTableWidgetItem;
-        item->setText(QString(QChar('A'+i)));
-        setHorizontalHeaderItem(i,item);
-    }
+    resetHeaderItem();
     setCurrentCell(0,0);
 }
 Cell* EasyTable::cell(int row, int column) const
@@ -42,7 +45,9 @@ Cell* EasyTable::cell(int row, int column) const
 }
 QString EasyTable::text(int row, int column) const
 {
-    Cell *c=cell(row,column);
+    Cell *c = cell(row,column);
+    // if c is not NULL,return the string type of its data
+    // ignoring the result of its formula
     if(c)
     {
         return c->text();
@@ -54,7 +59,9 @@ QString EasyTable::text(int row, int column) const
 }
 QString EasyTable::formula(int row, int column) const
 {
-    Cell *c=cell(row,column);
+    Cell *c = cell(row,column);
+    // if c is not NULL,return the string type of its data
+    // considering the result of its formula
     if(c)
     {
         return c->formula();
@@ -66,10 +73,10 @@ QString EasyTable::formula(int row, int column) const
 }
 void EasyTable::setFormula(int row, int column, const QString &formula)
 {
-    Cell *c=cell(row,column);
+    Cell *c = cell(row,column);
     if(!c)
     {
-        c=new Cell;
+        c = new Cell;
         setItem(row,column,c);
     }
     c->setFormula(formula);
@@ -102,15 +109,15 @@ bool EasyTable::writeFile(const QString &fileName)
     }
     QDataStream out(&file);
     out.setVersion(QDataStream::Qt_4_8);//version is 4.8
-    out<<quint32(MagicNumber);//if quint64? What about MagicNumber
-    //quint/qint强制转化数据大小，使数据获得应有的大小。MagicNumber是一个位于文件开始
+    out<<quint32(RECOGNITIONNUMBER);
+    //quint/qint强制转化数据大小，使数据获得应有的大小。recognitionNumber是一个位于文件开始
     //的随机数，确定文件格式
     QApplication::setOverrideCursor(Qt::WaitCursor);
-    for(int row=0;row<RowCount;row++)
+    for(int row = 0;row<RowCount;row++)
     {
-        for(int column=0;column<ColumnCount;column++)
+        for(int column = 0;column<ColumnCount;column++)
         {
-            QString str=formula(row,column);
+            QString str = formula(row,column);
             if(!str.isEmpty())
                 out<<quint16(row)<<quint16(column)<<str;
         }
@@ -131,9 +138,9 @@ bool EasyTable::readFile(const QString &fileName)
     }
     QDataStream in(&file);
     in.setVersion(QDataStream::Qt_4_8);//version is 4.8
-    quint32 magic;
-    in>>magic;
-    if(magic!=MagicNumber)
+    quint32 recognitionNumber;
+    in>>recognitionNumber;
+    if(recognitionNumber != RECOGNITIONNUMBER)
     {
         QMessageBox::warning(this,tr("EasyTable"),
                              tr("EasyTable程序不能处理文件 %1 ")
@@ -168,54 +175,54 @@ void EasyTable::cut()
 }
 void EasyTable::copy()
 {
-    QTableWidgetSelectionRange range=selectedRange();
+    QTableWidgetSelectionRange range = selectedRange();
     QString str;
-    for(int i=0;i<range.rowCount();i++)
+    for(int i = 0;i<range.rowCount();i++)
     {
         if(i>0)
-            str+='\n';
-        for(int j=0;j<range.columnCount();j++)
+            str += '\n';
+        for(int j = 0;j<range.columnCount();j++)
         {
             if(j>0)
-                str+='\t';
-            str+=formula(range.topRow()+i,range.leftColumn()+j);
-        }
-    }
+                str += '\t';
+            str += formula(range.topRow()+i,range.leftColumn()+j);
+        }//end for column
+    }//end for row
     QApplication::clipboard()->setText(str);
 }
 void EasyTable::paste()
 {
-    QTableWidgetSelectionRange range=selectedRange();
-    QString str=QApplication::clipboard()->text();
-    QStringList rows=str.split('\n');
-    int numRows=rows.count();
-    int numColumns=rows.first().count('\t')+1;
-    if(range.rowCount()*range.columnCount()!=1
-            &&(range.rowCount()!=numRows
-               ||range.columnCount()!=numColumns))
+    QTableWidgetSelectionRange range = selectedRange();
+    QString str = QApplication::clipboard()->text();
+    QStringList rows = str.split('\n');
+    int numRows = rows.count();
+    int numColumns = rows.first().count('\t')+1;
+    if(range.rowCount()*range.columnCount() != 1
+            &&(range.rowCount() != numRows
+               ||range.columnCount() != numColumns))
     {
         QMessageBox::information(this,tr("EasyTable"),
-                                 tr("数据无法复制或粘贴"
+                                 tr("数据无法复制或粘贴\n"
                                    "因为数据复制或粘贴"
                                    "的区域大小不合适"));//
         return;
     }
-    for(int i=0;i<numRows;i++)
+    for(int i = 0;i<numRows;i++)
     {
-        QStringList columns=rows[i].split('\t');
-        for(int j=0;j<numColumns;j++)
+        QStringList columns = rows[i].split('\t');
+        for(int j = 0;j<numColumns;j++)
         {
-            int row=range.topRow()+i;
-            int column=range.leftColumn()+j;
+            int row = range.topRow()+i;
+            int column = range.leftColumn()+j;
             if(row<RowCount&&column<ColumnCount)
                 setFormula(row,column,columns[j]);
-        }
-    }
+        }//end for column
+    }//end for row
     somethingChanged();
 }
 void EasyTable::del()
 {
-    QList<QTableWidgetItem *> items=selectedItems();
+    QList<QTableWidgetItem *> items = selectedItems();
     if(!items.isEmpty())
     {
         foreach (QTableWidgetItem *item,items)
@@ -223,6 +230,18 @@ void EasyTable::del()
         somethingChanged();
     }
 }
+void EasyTable::rowInsert()
+{
+    insertRow(1);
+    RowCount+=1;
+}
+void EasyTable::columnInsert()
+{
+    insertColumn(1);
+    ColumnCount+=1;
+    resetHeaderItem();
+}
+
 void EasyTable::selectCurrentRow()
 {
     selectRow(currentRow());
@@ -233,8 +252,8 @@ void EasyTable::selectCurrentColumn()
 }
 void EasyTable::findNext(const QString &str, Qt::CaseSensitivity cs)
 {
-    int row=currentRow();
-    int column=currentColumn()+1;
+    int row = currentRow();
+    int column = currentColumn()+1;
     while(row<RowCount)
     {
         while(column<ColumnCount)
@@ -248,18 +267,18 @@ void EasyTable::findNext(const QString &str, Qt::CaseSensitivity cs)
             }
             column++;
         }
-        column=0;
+        column = 0;
         row++;
     }
     QApplication::beep();
 }
 void EasyTable::findPrevious(const QString &str, Qt::CaseSensitivity cs)
 {
-    int row=currentRow();
-    int column=currentColumn()-1;
-    while(row>=0)
+    int row = currentRow();
+    int column = currentColumn()-1;
+    while(row >= 0)
     {
-        while(column>=0)
+        while(column >= 0)
         {
             if(text(row,column).contains(str,cs))
             {
@@ -277,9 +296,9 @@ void EasyTable::findPrevious(const QString &str, Qt::CaseSensitivity cs)
 }
 void EasyTable::recalculate()
 {
-    for(int column=0;column<ColumnCount;column++)
+    for(int column = 0;column<ColumnCount;column++)
     {
-        for(int row=0;row<RowCount;row++)
+        for(int row = 0;row<RowCount;row++)
         {
             if(cell(row,column))
                 cell(row,column)->setDirty();
@@ -289,28 +308,28 @@ void EasyTable::recalculate()
 }
 void EasyTable::setAutoRecalculate(bool recalc)
 {
-    autoRecalc=recalc;
+    autoRecalc = recalc;
     if(autoRecalc)
         recalculate();
 }
 void EasyTable::sort(const EasyTableCompare &compare)
 {
     QList<QStringList> rows;
-    QTableWidgetSelectionRange range=selectedRange();
+    QTableWidgetSelectionRange range = selectedRange();
     int i;
-    for(i=0;i<range.rowCount();i++)
+    for(i = 0;i<range.rowCount();i++)
     {
         QStringList row;
-        for(int j=0;j<range.columnCount();j++)
+        for(int j = 0;j<range.columnCount();j++)
             row.append(formula(range.topRow()+i,
                                range.leftColumn()+j));
-        row.append(row);
+        rows.append(row);
     }
     qStableSort(rows.begin(),rows.end(),compare);
-    for(i=0;i<range.rowCount();i++)
+    for(i = 0;i<range.rowCount();i++)
     {
-        for(int j=0;j<range.columnCount();j++)
-            setFormula(range.topRow()+1,range.leftColumn()+j,
+        for(int j = 0;j<range.columnCount();j++)
+            setFormula(range.topRow()+i,range.leftColumn()+j,
                        rows[i][j]);
     }
     clearSelection();
@@ -323,20 +342,30 @@ bool EasyTableCompare::operator ()(const QStringList& row1,
     for(int i=0;i<KeyCount;i++)
     {
         int column=keys[i];
-        if(column!=-1)
+        if(column != -1)
         {
-            if(row1[column]!=row2[column])
+            if(row1[column] != row2[column])
             {
-                if(ascending[i])
+                if(row1[column] != "" && row2[column] != "")
                 {
-                    return row1[column]<row2[column];
-                }
+                    if(ascending[i])
+                    {
+                        return row1[column]<row2[column];
+                    }
+                    else
+                    {
+                        return row1[column]>row2[column];
+                    }
+                }//end if(row1[column] != row2[column])
                 else
                 {
-                    return row1[column]>row2[column];
+                    if(row1[column] == "")
+                        return row1[column]>row2[column];
+                    else
+                        return row1[column]<row2[column];
                 }//end else
-            }//end if row1[column]!=row2[column]
-        }//end if column!=-1
+            }//end if row1[column]  !=  row2[column]
+        }//end if column  !=  -1
     }//end for
     return false;
 }

@@ -2,17 +2,23 @@
 #define SORTDIALOG_H
 
 #include <QDialog>
-#include "ui_sortdialog.h"
+#include "easytable.h"
 
-class SortDialog : public Ui::SortDialog,public QDialog
+namespace Ui {
+class SortDialog;
+}
+
+class SortDialog : public QDialog
 {
     Q_OBJECT
+    
 public:
     explicit SortDialog(QWidget *parent = 0);
+    ~SortDialog();
     void setColumnRange(QChar first,QChar last);
-signals:
-    
-public slots:
+    void setSortKeyandAscending(EasyTableCompare &compare);
+private:
+    Ui::SortDialog *ui;
 };
 
 #endif // SORTDIALOG_H

@@ -16,14 +16,16 @@ SOURCES += main.cpp\
         mainwindow.cpp \
     finddialog.cpp \
     gotocelldialog.cpp \
-    sortdialog.cpp \
     cell.cpp \
-    easytable.cpp
+    easytable.cpp \
+    sortdialog.cpp
 
 HEADERS  += mainwindow.h \
     finddialog.h \
     gotocelldialog.h \
-    sortdialog.h \
-    ui_sortdialog.h \
     cell.h \
-    easytable.h
+    easytable.h \
+    sortdialog.h
+
+FORMS += \
+    sortdialog.ui

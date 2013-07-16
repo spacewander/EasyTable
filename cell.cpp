@@ -21,16 +21,16 @@ QString Cell::formula() const
 void Cell::setData(int role, const QVariant &value)
 {
     QTableWidgetItem::setData(role,value);
-    if(Qt::EditRole==role)
+    if(Qt::EditRole == role)
         setDirty();
 }
 void Cell::setDirty()
 {
-    cacheIsDirty=true;
+    cacheIsDirty = true;
 }
 QVariant Cell::data(int role) const
 {
-    if(Qt::DisplayRole==role)
+    if(Qt::DisplayRole == role)
     {
         if(value().isValid())
         {
@@ -40,10 +40,10 @@ QVariant Cell::data(int role) const
         {
             return "????";
         }
-    }
-    else if(Qt::TextAlignmentRole==role)
+    }// end if
+    else if(Qt::TextAlignmentRole == role)
     {
-        if(QVariant::String==value().type())
+        if(QVariant::String == value().type())
         {
             return int(Qt::AlignLeft|Qt::AlignVCenter);
         }
@@ -51,7 +51,7 @@ QVariant Cell::data(int role) const
         {
             return int(Qt::AlignRight|Qt::AlignVCenter);
         }
-    }
+    }//end else if
     else
         return QTableWidgetItem::data(role);
 }
@@ -60,139 +60,139 @@ QVariant Cell::value() const
 {
     if(cacheIsDirty)
     {
-        cacheIsDirty=false;
-        QString formulaStr=formula();
+        cacheIsDirty = false;
+        QString formulaStr = formula();
         if(formulaStr.startsWith('\''))
         {
-            cachedValue=formulaStr.mid(1);
+            cachedValue = formulaStr.mid(1);
         }
         else if(formulaStr.startsWith('='))
         {
-            cachedValue=INVALID;
-            QString expr=formulaStr.mid(1);
+            cachedValue = INVALID;
+            QString expr = formulaStr.mid(1);
             expr.replace(" ","");
             expr.append(QChar::Null);
-            int pos=0;
-            cachedValue=evalExpression(expr,pos);
-            if(expr[pos]!=QChar::Null)
-                cachedValue=INVALID;
+            int pos = 0;
+            cachedValue = evalExpression(expr,pos);
+            if(expr[pos]  !=  QChar::Null)
+                cachedValue = INVALID;
         }
         else
         {
             bool ok;
-            double d=formulaStr.toDouble(&ok);
+            double d = formulaStr.toDouble(&ok);
             if(ok)
-                cachedValue=d;
+                cachedValue = d;
             else
-                cachedValue=formulaStr;
+                cachedValue = formulaStr;
         }//end else
     }//end if cacheIsDirty
     return cachedValue;
 }
 QVariant Cell::evalExpression(const QString &str, int &pos) const
 {
-    QVariant result=evalTerm(str,pos);
-    while(str[pos]!=QChar::Null)
+    QVariant result = evalTerm(str,pos);
+    while(str[pos]  !=  QChar::Null)
     {
-        QChar op=str[pos];
-        if(op!='+'&&op!='-')
+        QChar op = str[pos];
+        if(op != '+'&&op != '-')
             return result;
         pos++;
-        QVariant term=evalTerm(str,pos);
-        if(QVariant::Double==result.type()&&
-                QVariant::Double==term.type())
+        QVariant term = evalTerm(str,pos);
+        if(QVariant::Double == result.type()&&
+                QVariant::Double == term.type())
         {
-            if('+'==op)
-                result=result.toDouble()+term.toDouble();
+            if('+' == op)
+                result = result.toDouble()+term.toDouble();
             else
-                result=result.toDouble()-term.toDouble();
+                result = result.toDouble()-term.toDouble();
         }
         else
         {
-            result=INVALID;
+            result = INVALID;
         }//end else
     }//end while
-    return true;
+    return result;
 }
 QVariant Cell::evalTerm(const QString &str, int &pos) const
 {
-    QVariant result=evalFactor(str,pos);
-    while(str[pos]!=QChar::Null)
+    QVariant result = evalFactor(str,pos);
+    while(str[pos] != QChar::Null)
     {
-        QChar op=str[pos];
-        if(op!='*'&&op!='/')
+        QChar op = str[pos];
+        if(op != '*'&&op != '/')
             return result;
         pos++;
-        QVariant factor=evalFactor(str,pos);
-        if(QVariant::Double==result.type()&&
-                QVariant::Double==factor.type())
+        QVariant factor = evalFactor(str,pos);
+        if(QVariant::Double == result.type()&&
+                QVariant::Double == factor.type())
         {
-            if('*'==op)
-                result=result.toDouble()*factor.toDouble();
+            if('*' == op)
+                result = result.toDouble()*factor.toDouble();
             else
             {
-                if(factor.toDouble()!=0.0)
-                    result=result.toDouble()/factor.toDouble();
+                if(factor.toDouble() != 0.0)
+                    result = result.toDouble()/factor.toDouble();
                 else
-                    result=INVALID;
+                    result = INVALID;
             }//end else
         }//end if
         else
-            result=INVALID;
+            result = INVALID;
     }//end while
     return result;
 }
 QVariant Cell::evalFactor(const QString &str, int &pos) const
 {
     QVariant result;
-    bool negative=false;
-    if('-'==str[pos])
+    bool negative = false;
+    if('-' == str[pos])
     {
-        negative=true;
+        negative = true;
         pos++;
     }
-    if('('==str[pos])
+    if('(' == str[pos])
     {
         pos++;
-        result=evalExpression(str,pos);
-        if(str[pos]!=')')
-            result=INVALID;
+        result = evalExpression(str,pos);
+        if(str[pos] != ')')
+            result = INVALID;
         pos++;
     }
     else
     {
         QRegExp regExp("[A-Za-z][1-9][0-9]{0,2}");
         QString token;
-        while(str[pos].isLetterOrNumber()||'.'==str[pos])
+        while(str[pos].isLetterOrNumber()||'.' == str[pos])
         {
-            token+=str[pos];
+            token += str[pos];
             pos++;
         }
         if(regExp.exactMatch(token))
         {
-            int column=token[0].toUpper().unicode()-'A';
-            int row=token.mid(1).toInt()-1;
-            Cell *c=static_cast<Cell* >(tableWidget()->
+            int column = token[0].toUpper().unicode()-'A';
+            int row = token.mid(1).toInt()-1;
+            Cell *c = static_cast<Cell* >(tableWidget()->
                                         item(row,column));
             if(c)
-                result=c->value();
+                result = c->value();
             else
-                result=0.0;
+                result = 0.0;
         }
         else
         {
             bool ok;
-            result=token.toDouble(&ok);
+            result = token.toDouble(&ok);
             if(!ok)
-                result=INVALID;
+                result = INVALID;
         }//end else for !regExp.exactMatch(token)
-    }//end else for '('!=str[pos]
+    }//end else for '(' != str[pos]
     if(negative)
     {
-        if(QVariant::Double==result.type())
-            result=-result.toDouble();
+        if(QVariant::Double == result.type())
+            result = -result.toDouble();
         else
-            result=INVALID;
+            result = INVALID;
     }//end if
     return result;
 }

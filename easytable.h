@@ -26,6 +26,8 @@ public slots:
     void copy();
     void paste();
     void del();
+    void rowInsert();
+    void columnInsert();
     void selectCurrentRow();
     void selectCurrentColumn();
     void recalculate();
@@ -35,11 +37,13 @@ public slots:
 private slots:
     void somethingChanged();
 private:
-    enum{MagicNumber =0x7F51C883,RowCount=199,ColumnCount=26};//set the range of sheet
+    enum{RECOGNITIONNUMBER =0x7F51C883/*,RowCount=199,ColumnCount=20*/};//set the range of sheet
+    static int RowCount,ColumnCount;
     Cell* cell(int row,int column) const;
     QString text(int row,int column) const;
     QString formula(int row,int column) const;
     void setFormula(int row,int column,const QString &formula);
+    void resetHeaderItem();
     bool autoRecalc;
 };
 

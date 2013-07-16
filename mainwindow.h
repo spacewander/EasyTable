@@ -66,6 +66,7 @@ private:
 
 	QToolBar *fileToolBar;
 	QToolBar *editToolBar;
+
 	QAction *newAction;
 	QAction *openAction;
 	QAction *saveAction;
@@ -76,6 +77,8 @@ private:
 	QAction *copyAction;
 	QAction *pasteAction;
 	QAction *deleteAction;
+    QAction *insertRowAction;
+    QAction *insertColumnAction;
 	QAction *selectRowAction;
 	QAction *selectColumnAction;
 	QAction *selectAllAction;
