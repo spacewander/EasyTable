@@ -214,7 +214,9 @@ void MainWindow::createContextMenu()
     sheet->addAction(pasteAction);
     sheet->addAction(insertRowAction);
     sheet->addAction(insertColumnAction);
-
+    QMenu *subMenu =new QMenu(tr("对齐"));
+    subMenu->addAction(leftAlignmentAction);
+    sheet->addAction(subMenu->menuAction());
     sheet->addAction(selectRowAction);
     sheet->addAction(selectColumnAction);
     sheet->addAction(selectAllAction);
@@ -517,7 +519,6 @@ void MainWindow::setTextColor()
     QColor textColor = QColorDialog::getColor(Qt::black);
     if(textColor.isValid())
     {
-       // QBrush brush(textColor);
         sheet->setTextColor(textColor);
     }
 }
@@ -526,7 +527,6 @@ void MainWindow::setBackgroundColor()
     QColor backgroundColor = QColorDialog::getColor(Qt::blue);
     if(backgroundColor.isValid())
     {
-        //QBrush brush(backgroundColor);
         sheet->setBackgroundColor(backgroundColor);
     }
 }

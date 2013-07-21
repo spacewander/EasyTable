@@ -379,7 +379,8 @@ void EasyTable::setFont(const QFont &font)
         for(int j = 0;j<range.columnCount();j++)
         {
             Cell *c = cell(range.topRow()+i,range.leftColumn()+j);
-            c->setFont(font);
+            if(c != nullptr)
+                c->setFont(font);
         }//end for column
     }//end for row
 }
@@ -392,8 +393,13 @@ void EasyTable::setAlignment(int alignment)
         for(int j = 0;j<range.columnCount();j++)
         {
             Cell *c = cell(range.topRow()+i,range.leftColumn()+j);
-            c->closeDefaultAlignment();
-            c->setTextAlignment(alignment);
+            if(c != nullptr)
+            {
+                c->closeDefaultAlignment();
+                c->setTextAlignment(Qt::AlignVCenter);
+                //if not indicated, the alignment type should be center in vertical
+                c->setTextAlignment(alignment);
+            }
         }//end for column
     }//end for row
 }
@@ -418,7 +424,8 @@ void EasyTable::setBackgroundColor(QColor &backgroundColor)
         for(int j = 0;j<range.columnCount();j++)
         {
             QTableWidgetItem *c = item(range.topRow()+i,range.leftColumn()+j);
-            c->setBackgroundColor(backgroundColor);
+            if(c != nullptr)
+                c->setBackgroundColor(backgroundColor);
         }//end for column
     }//end for row
 }
