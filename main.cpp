@@ -8,6 +8,5 @@ int main(int argc, char *argv[])
     QTextCodec::setCodecForTr(QTextCodec::codecForLocale());
     MainWindow w;
     w.show();
-    
     return a.exec();
 }

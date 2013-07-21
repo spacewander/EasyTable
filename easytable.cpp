@@ -1,12 +1,13 @@
 ﻿#include "easytable.h"
-#include <QtAlgorithms>
-#include <QTableWidget>
-#include <QFile>
-#include <QMessageBox>
-#include <QDataStream>
 #include <QApplication>
 #include <QClipboard>
+#include <QDataStream>
+#include <QFile>
+#include <QFont>
+#include <QMessageBox>
 #include <QStringList>
+#include <QtAlgorithms>
+#include <QTableWidget>
 #include "cell.h"
 
 EasyTable::EasyTable(QWidget *parent) :
@@ -21,7 +22,7 @@ EasyTable::EasyTable(QWidget *parent) :
             this,SLOT(somethingChanged()));
     clear();
 }
-void EasyTable::resetHeaderItem()
+void EasyTable::setHeaderItem()
 {
     for(int i = 0;i<ColumnCount;i++)
     {
@@ -36,7 +37,7 @@ void EasyTable::clear()
     setColumnCount(0);
     setRowCount(RowCount);
     setColumnCount(ColumnCount);
-    resetHeaderItem();
+    setHeaderItem();
     setCurrentCell(0,0);
 }
 Cell* EasyTable::cell(int row, int column) const
@@ -233,13 +234,13 @@ void EasyTable::del()
 void EasyTable::rowInsert()
 {
     insertRow(1);
-    RowCount+=1;
+    RowCount += 1;
 }
 void EasyTable::columnInsert()
 {
     insertColumn(1);
-    ColumnCount+=1;
-    resetHeaderItem();
+    ColumnCount += 1;
+    setHeaderItem();
 }
 
 void EasyTable::selectCurrentRow()
@@ -368,4 +369,55 @@ bool EasyTableCompare::operator ()(const QStringList& row1,
         }//end if column  !=  -1
     }//end for
     return false;
+}
+
+void EasyTable::setFont(const QFont &font)
+{
+    QTableWidgetSelectionRange range = selectedRange();
+    for(int i = 0;i<range.rowCount();i++)
+    {
+        for(int j = 0;j<range.columnCount();j++)
+        {
+            Cell *c = cell(range.topRow()+i,range.leftColumn()+j);
+            c->setFont(font);
+        }//end for column
+    }//end for row
+}
+void EasyTable::setAlignment(int alignment)
+//the alignment is from Qt::Align...
+{
+    QTableWidgetSelectionRange range = selectedRange();
+    for(int i = 0;i<range.rowCount();i++)
+    {
+        for(int j = 0;j<range.columnCount();j++)
+        {
+            Cell *c = cell(range.topRow()+i,range.leftColumn()+j);
+            c->closeDefaultAlignment();
+            c->setTextAlignment(alignment);
+        }//end for column
+    }//end for row
+}
+void EasyTable::setTextColor(QColor &textColor)
+{
+    QTableWidgetSelectionRange range = selectedRange();
+    for(int i = 0;i<range.rowCount();i++)
+    {
+        for(int j = 0;j<range.columnCount();j++)
+        {
+            Cell *c = cell(range.topRow()+i,range.leftColumn()+j);
+            c->setTextColor(textColor);
+        }//end for column
+    }//end for row
+}
+void EasyTable::setBackgroundColor(QColor &backgroundColor)
+{
+    QTableWidgetSelectionRange range = selectedRange();
+    for(int i = 0;i<range.rowCount();i++)
+    {
+        for(int j = 0;j<range.columnCount();j++)
+        {
+            QTableWidgetItem *c = item(range.topRow()+i,range.leftColumn()+j);
+            c->setBackgroundColor(backgroundColor);
+        }//end for column
+    }//end for row
 }

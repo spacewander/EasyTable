@@ -12,6 +12,7 @@ public:
     void setData(int role, const QVariant &value);
     QVariant data(int role) const;
     void setFormula(const QString& formula);
+    void closeDefaultAlignment();
     QString formula() const;
     void setDirty();
 private:
@@ -21,6 +22,7 @@ private:
     QVariant evalFactor(const QString& str,int& pos) const;
     mutable QVariant cachedValue;
     mutable bool cacheIsDirty;
+    bool defaultAlignment;
 signals:
     
 public slots:

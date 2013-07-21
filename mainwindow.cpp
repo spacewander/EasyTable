@@ -1,10 +1,14 @@
 ﻿//Qt 4.8.4版
+#include <QBrush>
 #include <QCheckBox>
 #include <QCloseEvent>
 #include <QDialog>
 #include <QEvent>
 #include <QFileDialog>
+#include <QFontDialog>
+#include <QColorDialog>
 #include <QLabel>
+#include <QList>
 #include <QLineEdit>
 #include <QMenu>
 #include <QMenuBar>
@@ -92,6 +96,7 @@ void MainWindow::createActions()
 	deleteAction->setShortcut(QKeySequence::Delete);
 	deleteAction->setStatusTip(tr("删除"));
     connect(deleteAction,SIGNAL(triggered()),sheet,SLOT(del()));
+
     insertRowAction = new QAction(tr("插入行"),this);
     insertRowAction->setStatusTip(tr("插入行"));
     connect(insertRowAction,SIGNAL(triggered()),sheet,SLOT(rowInsert()));
@@ -109,6 +114,19 @@ void MainWindow::createActions()
 	selectAllAction->setShortcut(QKeySequence::SelectAll);
 	selectAllAction->setStatusTip(tr("选择所有单元格"));
     connect(selectAllAction,SIGNAL(triggered()),sheet,SLOT(selectAll()));
+
+    fontAction = new QAction(tr("字体"),this);
+    connect(fontAction,SIGNAL(triggered()),this,SLOT(setFont()));
+    textColorAction = new QAction(tr("字体颜色"),this);
+    connect(textColorAction,SIGNAL(triggered()),this,SLOT(setTextColor()));
+    backgroundColorAction = new QAction(tr("单元格颜色"),this);
+    connect(backgroundColorAction,SIGNAL(triggered()),this,SLOT(setBackgroundColor()));
+    leftAlignmentAction = new QAction(tr("左对齐"),this);
+    connect(leftAlignmentAction,SIGNAL(triggered()),this,SLOT(setLeftAlignment()));
+    centerAlignmentAction = new QAction(tr("居中"),this);
+    connect(centerAlignmentAction,SIGNAL(triggered()),this,SLOT(setCenterAlignment()));
+    rightAlignmentAction = new QAction(tr("右对齐"),this);
+    connect(rightAlignmentAction,SIGNAL(triggered()),this,SLOT(setRightAlignment()));
 
     findAction = new QAction(tr("查找"),this);
 	findAction->setStatusTip(tr("查找"));
@@ -151,10 +169,12 @@ void MainWindow::createMenus()
 	fileMenu->addAction(saveAsAction);
     fileMenu->addAction(closeAction);
     separatorAction = fileMenu->addSeparator();
+    recentFilesSubMenu = new QMenu(tr("最近打开的文件"));
     for(int i = 0;i<MaxRecentFiles;i++)
 	{
-		fileMenu->addAction(recentFileActions[i]);
+        recentFilesSubMenu->addAction(recentFileActions[i]);
 	}
+    fileMenu->addMenu(recentFilesSubMenu);
 	fileMenu->addSeparator();
 	fileMenu->addAction(exitAction);
 
@@ -175,12 +195,12 @@ void MainWindow::createMenus()
     editMenu->addAction(sortAction);
 
     toolsMenu = menuBar()->addMenu(tr("工具"));
-    //toolsMenu->addAction(recalculateAction);
 	toolsMenu->addAction(sortAction);
+    toolsMenu->addAction(findAction);
+    toolsMenu->addAction(goToCellAction);
 
     optionsMenu = menuBar()->addMenu(tr("选项"));
 	optionsMenu->addAction(showGridAction);
-    //optionsMenu->addAction(autoRecalcAction);
 
 	menuBar()->addSeparator();
 
@@ -194,9 +214,13 @@ void MainWindow::createContextMenu()
     sheet->addAction(pasteAction);
     sheet->addAction(insertRowAction);
     sheet->addAction(insertColumnAction);
+
     sheet->addAction(selectRowAction);
     sheet->addAction(selectColumnAction);
     sheet->addAction(selectAllAction);
+    sheet->addAction(fontAction);
+    sheet->addAction(textColorAction);
+    sheet->addAction(backgroundColorAction);
     sheet->setContextMenuPolicy(Qt::ActionsContextMenu);
 }
 void MainWindow::createToolBars()
@@ -216,10 +240,19 @@ void MainWindow::createToolBars()
 	editToolBar->addAction(findAction);
 	editToolBar->addAction(goToCellAction);
     editToolBar->addAction(sortAction);
+
+    formatToolBar = addToolBar(tr("单元格格式"));
+    formatToolBar->addAction(fontAction);
+    formatToolBar->addAction(textColorAction);
+    formatToolBar->addAction(backgroundColorAction);
+    formatToolBar->addSeparator();
+    formatToolBar->addAction(leftAlignmentAction);
+    formatToolBar->addAction(centerAlignmentAction);
+    formatToolBar->addAction(rightAlignmentAction);
 }
 void MainWindow::createStatusBar()
 {
-    locationLabel = new QLabel("W199");
+    locationLabel = new QLabel(" ");
 	locationLabel->setAlignment(Qt::AlignHCenter);
 	locationLabel->setMinimumSize(locationLabel->sizeHint());
 
@@ -279,9 +312,7 @@ void MainWindow::open()
         QString fileName = QFileDialog::getOpenFileName(this,
             tr("打开表格" ),
 			".",
-            tr("easytable files (*.et)\n"
-            /*"Comma-separeted values files (*.csv)\n"
-            "Microsoft Office Excel files (*.xls *.xlsx)"*/));//set the openable type
+            tr("easytable files (*.et)\n"));//set the openable type
         if(!fileName.isEmpty())
 			loadFile(fileName);
 	}
@@ -299,7 +330,7 @@ bool MainWindow::loadFile(const QString &fileName)
 }
 bool MainWindow::save()
 {
-	if(curFile.isEmpty())
+    if(curFile.isEmpty() || curFile == tr("未命名"))
 	{
 		return saveAs();
 	}
@@ -337,9 +368,7 @@ bool MainWindow::saveAs()
     QString fileName = QFileDialog::getSaveFileName(
         this,tr("保存表格"),
 		".",
-        tr("easytable files (*.et)\n"
-        /*"Comma-separeted values files (*.csv)\n"
-        "Microsoft Office Excel files (*.xls *.xlsx)"*/));//set the save-able type
+        tr("easytable files (*.et)\n"));//set the save-able type
 	if(fileName.isEmpty())
 	{
 		return false;
@@ -361,9 +390,8 @@ void MainWindow::closeEvent(QCloseEvent *event)
 void MainWindow::setCurrentFile(const QString &fileName)
 {
     curFile = fileName;
-    //setWindowModified(true);
     QString shownName = tr("未命名");
-	if(!curFile.isEmpty())
+    if((!curFile.isEmpty()) && (curFile != tr("未命名")))
 	{
         shownName = strippedName(curFile);
 		recentFiles.removeAll(curFile);
@@ -459,6 +487,50 @@ void MainWindow::sort()
         sheet->sort(compare);
 	}
 }
+
+void MainWindow::setFont()
+{
+    bool ok;
+    QFont font = QFontDialog::getFont(&ok);
+    if(ok)
+    {
+       sheet->setFont(font);
+    }
+}
+void MainWindow::setLeftAlignment()
+{
+    int alignmentCode = Qt::AlignLeft;
+    sheet->setAlignment(alignmentCode);
+}
+void MainWindow::setCenterAlignment()
+{
+    int alignmentCode = Qt::AlignCenter;
+    sheet->setAlignment(alignmentCode);
+}
+void MainWindow::setRightAlignment()
+{
+    int alignmentCode = Qt::AlignRight;
+    sheet->setAlignment(alignmentCode);
+}
+void MainWindow::setTextColor()
+{
+    QColor textColor = QColorDialog::getColor(Qt::black);
+    if(textColor.isValid())
+    {
+       // QBrush brush(textColor);
+        sheet->setTextColor(textColor);
+    }
+}
+void MainWindow::setBackgroundColor()
+{
+    QColor backgroundColor = QColorDialog::getColor(Qt::blue);
+    if(backgroundColor.isValid())
+    {
+        //QBrush brush(backgroundColor);
+        sheet->setBackgroundColor(backgroundColor);
+    }
+}
+
 void MainWindow::about()
 {
 	QMessageBox::about(this,tr("About EasyTable"),
@@ -484,8 +556,3 @@ void MainWindow::readSettings()
     bool autoRecalc = settings.value("autoRecalc",true).toBool();
 	autoRecalcAction->setChecked(autoRecalc);
 }
-//void MainWindow::newFile()
-//{
-//    MainWindow *mainWin=new MainWindow;
-//    mainWin->show();
-//}

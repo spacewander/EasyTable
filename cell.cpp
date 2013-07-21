@@ -22,11 +22,18 @@ void Cell::setData(int role, const QVariant &value)
 {
     QTableWidgetItem::setData(role,value);
     if(Qt::EditRole == role)
+    {
         setDirty();
+        defaultAlignment = true;
+    }
 }
 void Cell::setDirty()
 {
     cacheIsDirty = true;
+}
+void Cell::closeDefaultAlignment()
+{
+    defaultAlignment = false;
 }
 QVariant Cell::data(int role) const
 {
@@ -41,7 +48,7 @@ QVariant Cell::data(int role) const
             return "????";
         }
     }// end if
-    else if(Qt::TextAlignmentRole == role)
+    else if(Qt::TextAlignmentRole == role && defaultAlignment == true)
     {
         if(QVariant::String == value().type())
         {

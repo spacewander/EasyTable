@@ -30,6 +30,12 @@ protected:
 		void closeAllWindows();
 		void updateStatusBar();
         void sheetModified();
+        void setFont();
+        void setLeftAlignment();
+        void setCenterAlignment();
+        void setRightAlignment();
+        void setTextColor();
+        void setBackgroundColor();
 private:
 	void createActions();
 	void createMenus();
@@ -50,10 +56,10 @@ private:
     GotoCellDialog *toCell;
 	QLabel *locationLabel;
 	QLabel *formulaLabel;
-	QStringList recentFiles;//5.29
+    QStringList recentFiles;
 	QString curFile;
 
-	enum{MaxRecentFiles=5};
+    enum{MaxRecentFiles = 5};
 	QAction *recentFileActions[MaxRecentFiles];
 	QAction *separatorAction;
 
@@ -66,6 +72,7 @@ private:
 
 	QToolBar *fileToolBar;
 	QToolBar *editToolBar;
+    QToolBar *formatToolBar;
 
 	QAction *newAction;
 	QAction *openAction;
@@ -73,22 +80,35 @@ private:
 	QAction *saveAsAction;
 	QAction *closeAction;
 	QAction *exitAction;
+    QMenu *recentFilesSubMenu;
+
 	QAction *cutAction;
 	QAction *copyAction;
 	QAction *pasteAction;
 	QAction *deleteAction;
+
     QAction *insertRowAction;
     QAction *insertColumnAction;
 	QAction *selectRowAction;
 	QAction *selectColumnAction;
 	QAction *selectAllAction;
+
 	QAction *findAction;
 	QAction *goToCellAction;
 	QAction *recalculateAction;
 	QAction *sortAction;
+
 	QAction *autoRecalcAction;
 	QAction *showGridAction;
+
 	QAction *aboutAction;
+
+    QAction *fontAction;
+    QAction *textColorAction;
+    QAction *backgroundColorAction;
+    QAction *leftAlignmentAction;
+    QAction *centerAlignmentAction;
+    QAction *rightAlignmentAction;
 };
 
 #endif // MAINWINDOW_H

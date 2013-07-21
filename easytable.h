@@ -19,6 +19,10 @@ public:
     bool readFile(const QString &fileName);
     bool writeFile(const QString &fileName);
     void sort(const EasyTableCompare &compare);
+    void setFont(const QFont &font);
+    void setAlignment(int alignment);
+    void setTextColor(QColor &textColor);
+    void setBackgroundColor(QColor &backgroundColor);
 signals:
     void modified();
 public slots:
@@ -33,17 +37,17 @@ public slots:
     void recalculate();
     void setAutoRecalculate(bool recalc);
     void findNext(const QString &str,Qt::CaseSensitivity cs);
-    void findPrevious(const QString &str,Qt::CaseSensitivity cs);
+    void findPrevious(const QString &str,Qt::CaseSensitivity cs);    
 private slots:
     void somethingChanged();
 private:
-    enum{RECOGNITIONNUMBER =0x7F51C883/*,RowCount=199,ColumnCount=20*/};//set the range of sheet
+    enum{RECOGNITIONNUMBER =0x7F51C883};//set the range of sheet
     static int RowCount,ColumnCount;
     Cell* cell(int row,int column) const;
     QString text(int row,int column) const;
     QString formula(int row,int column) const;
     void setFormula(int row,int column,const QString &formula);
-    void resetHeaderItem();
+    void setHeaderItem();
     bool autoRecalc;
 };
 
@@ -56,4 +60,5 @@ public:
     int keys[KeyCount];
     bool ascending[KeyCount];
 };
+
 #endif // EasyTable_H
