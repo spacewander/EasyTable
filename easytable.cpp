@@ -405,7 +405,8 @@ void EasyTable::setTextColor(QColor &textColor)
         for(int j = 0;j<range.columnCount();j++)
         {
             Cell *c = cell(range.topRow()+i,range.leftColumn()+j);
-            c->setTextColor(textColor);
+            if(c != nullptr)
+                c->setTextColor(textColor);
         }//end for column
     }//end for row
 }
