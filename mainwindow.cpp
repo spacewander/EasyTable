@@ -1,21 +1,25 @@
-﻿//Qt 4.8.4版
-#include <QBrush>
+﻿//Qt 4.8.4
 #include <QCheckBox>
+#include <QColorDialog>
 #include <QCloseEvent>
 #include <QDialog>
 #include <QEvent>
 #include <QFileDialog>
 #include <QFontDialog>
-#include <QColorDialog>
+#include <QIcon>
 #include <QLabel>
 #include <QList>
 #include <QLineEdit>
 #include <QMenu>
 #include <QMenuBar>
 #include <QMessageBox>
+#include <QPainter>
+#include <QPrintDialog>
+#include <QPrinter>
 #include <QSettings>
 #include <QStatusBar>
 #include <QTableWidgetSelectionRange>
+#include <QTextDocument>
 #include <QToolBar>
 #include <QWidget>
 #include "easytable.h"
@@ -62,6 +66,10 @@ void MainWindow::createActions()
 	saveAsAction->setShortcut(QKeySequence::SaveAs);
 	saveAsAction->setStatusTip(tr("另存为"));
 	connect(saveAsAction,SIGNAL(triggered()),this,SLOT(saveAs()));
+    printAction = new QAction(tr("打印"),this);
+    printAction->setShortcut(QKeySequence::Print);
+    printAction->setStatusTip(tr("打印"));
+    connect(printAction,SIGNAL(triggered()),this,SLOT(print()));
 
     for(int i = 0;i<MaxRecentFiles;i++)
 	{
@@ -78,7 +86,7 @@ void MainWindow::createActions()
     exitAction = new QAction(tr("退出"),this);
 	exitAction->setShortcut(tr("Ctrl+Q"));
 	exitAction->setStatusTip(tr("退出"));
-	connect(exitAction,SIGNAL(triggered()),this,SLOT(closeAllWindows()));//this should be the QApplication;
+    connect(exitAction,SIGNAL(triggered()),this,SLOT(closeAllWindows()));//
 
     cutAction = new QAction(tr("剪切"),this);
 	cutAction->setShortcut(QKeySequence::Cut);
@@ -105,10 +113,10 @@ void MainWindow::createActions()
     connect(insertColumnAction,SIGNAL(triggered()),sheet,SLOT(columnInsert()));
 
     selectRowAction = new QAction(tr("选中行"),this);
-	selectRowAction->setStatusTip(tr("选择行"));
+    selectRowAction->setStatusTip(tr("选择行"));
     connect(selectRowAction,SIGNAL(triggered()),sheet,SLOT(selectCurrentRow()));
     selectColumnAction = new QAction(tr("选中列"),this);
-	selectColumnAction->setStatusTip(tr("选择列"));
+    selectColumnAction->setStatusTip(tr("选择列"));
     connect(selectColumnAction,SIGNAL(triggered()),sheet,SLOT(selectCurrentColumn()));
     selectAllAction = new QAction(tr("选中全部"),this);
 	selectAllAction->setShortcut(QKeySequence::SelectAll);
@@ -119,14 +127,30 @@ void MainWindow::createActions()
     connect(fontAction,SIGNAL(triggered()),this,SLOT(setFont()));
     textColorAction = new QAction(tr("字体颜色"),this);
     connect(textColorAction,SIGNAL(triggered()),this,SLOT(setTextColor()));
+
+    textColorIconAction = new QAction(this);
+    textColorIcon = setIconColor(textColorIcon,Qt::black);
+    textColorIconAction->setIcon(textColorIcon);
+    connect(textColorIconAction,SIGNAL(triggered()),this,SLOT(setTextColor()));
+
     backgroundColorAction = new QAction(tr("单元格颜色"),this);
     connect(backgroundColorAction,SIGNAL(triggered()),this,SLOT(setBackgroundColor()));
+
+    backgroundColorIconAction = new QAction(this);
+    backgroundColorIcon = setIconColor(backgroundColorIcon,Qt::white);
+    backgroundColorIconAction->setIcon(backgroundColorIcon);
+    connect(backgroundColorIconAction,SIGNAL(triggered()),this,SLOT(setBackgroundColor()));
+
     leftAlignmentAction = new QAction(tr("左对齐"),this);
     connect(leftAlignmentAction,SIGNAL(triggered()),this,SLOT(setLeftAlignment()));
     centerAlignmentAction = new QAction(tr("居中"),this);
     connect(centerAlignmentAction,SIGNAL(triggered()),this,SLOT(setCenterAlignment()));
     rightAlignmentAction = new QAction(tr("右对齐"),this);
     connect(rightAlignmentAction,SIGNAL(triggered()),this,SLOT(setRightAlignment()));
+    topAlignmentAction = new QAction(tr("基于顶线对齐"),this);
+    connect(topAlignmentAction,SIGNAL(triggered()),this,SLOT(setTopAlignment()));
+    bottomAlignmentAction = new QAction(tr("基于底线对齐"),this);
+    connect(bottomAlignmentAction,SIGNAL(triggered()),this,SLOT(setBottomAlignment()));
 
     findAction = new QAction(tr("查找"),this);
 	findAction->setStatusTip(tr("查找"));
@@ -154,6 +178,12 @@ void MainWindow::createActions()
     showGridAction->setStatusTip(tr("显示或隐藏单元格的边线"));
 	connect(showGridAction,SIGNAL(toggled(bool)),
         sheet,SLOT(setShowGrid(bool)));
+    defaultAlignmentAction = new QAction(tr("&使用默认对齐"),this);
+    defaultAlignmentAction->setCheckable(true);
+    defaultAlignmentAction->setChecked(sheet->getDefaultAlignment());
+    defaultAlignmentAction->setStatusTip(tr("默认对齐"));
+    connect(defaultAlignmentAction,SIGNAL(toggled(bool)),
+        sheet,SLOT(setDefaultAlignment(bool)));
 
     aboutAction = new QAction(tr("&关于"),this);
     aboutAction->setStatusTip(tr("关于我们"));
@@ -168,6 +198,7 @@ void MainWindow::createMenus()
 	fileMenu->addAction(saveAction);
 	fileMenu->addAction(saveAsAction);
     fileMenu->addAction(closeAction);
+    fileMenu->addAction(printAction);
     separatorAction = fileMenu->addSeparator();
     recentFilesSubMenu = new QMenu(tr("最近打开的文件"));
     for(int i = 0;i<MaxRecentFiles;i++)
@@ -201,6 +232,7 @@ void MainWindow::createMenus()
 
     optionsMenu = menuBar()->addMenu(tr("选项"));
 	optionsMenu->addAction(showGridAction);
+    optionsMenu->addAction(defaultAlignmentAction);
 
 	menuBar()->addSeparator();
 
@@ -212,17 +244,29 @@ void MainWindow::createContextMenu()
     sheet->addAction(cutAction);
     sheet->addAction(copyAction);
     sheet->addAction(pasteAction);
-    sheet->addAction(insertRowAction);
-    sheet->addAction(insertColumnAction);
-    QMenu *subMenu =new QMenu(tr("对齐"));
-    subMenu->addAction(leftAlignmentAction);
-    sheet->addAction(subMenu->menuAction());
-    sheet->addAction(selectRowAction);
-    sheet->addAction(selectColumnAction);
-    sheet->addAction(selectAllAction);
     sheet->addAction(fontAction);
     sheet->addAction(textColorAction);
     sheet->addAction(backgroundColorAction);
+
+    insertSubMenu = new QMenu(tr("插入"));
+    insertSubMenu->addAction(insertRowAction);
+    insertSubMenu->addAction(insertColumnAction);
+
+    alignmentSubMenu = new QMenu(tr("对齐"));
+    alignmentSubMenu->addAction(leftAlignmentAction);
+    alignmentSubMenu->addAction(centerAlignmentAction);
+    alignmentSubMenu->addAction(rightAlignmentAction);
+    alignmentSubMenu->addAction(topAlignmentAction);
+    alignmentSubMenu->addAction(bottomAlignmentAction);
+
+    chooseSubMenu = new QMenu(tr("选择"));
+    chooseSubMenu->addAction(selectRowAction);
+    chooseSubMenu->addAction(selectColumnAction);
+    chooseSubMenu->addAction(selectAllAction);
+
+    sheet->addAction(alignmentSubMenu->menuAction());
+    sheet->addAction(insertSubMenu->menuAction());
+    sheet->addAction(chooseSubMenu->menuAction());
     sheet->setContextMenuPolicy(Qt::ActionsContextMenu);
 }
 void MainWindow::createToolBars()
@@ -242,15 +286,25 @@ void MainWindow::createToolBars()
 	editToolBar->addAction(findAction);
 	editToolBar->addAction(goToCellAction);
     editToolBar->addAction(sortAction);
+    editToolBar->addSeparator();
 
     formatToolBar = addToolBar(tr("单元格格式"));
     formatToolBar->addAction(fontAction);
     formatToolBar->addAction(textColorAction);
-    formatToolBar->addAction(backgroundColorAction);
+    formatToolBar->addAction(textColorIconAction);
     formatToolBar->addSeparator();
-    formatToolBar->addAction(leftAlignmentAction);
-    formatToolBar->addAction(centerAlignmentAction);
-    formatToolBar->addAction(rightAlignmentAction);
+    formatToolBar->addAction(backgroundColorAction);
+    formatToolBar->addAction(backgroundColorIconAction);
+    formatToolBar->addSeparator();
+
+    alignmentToolBar = addToolBar(tr("对齐"));
+    alignmentToolBar->addAction(leftAlignmentAction);
+    alignmentToolBar->addAction(centerAlignmentAction);
+    alignmentToolBar->addAction(rightAlignmentAction);
+    alignmentToolBar->addSeparator();
+    alignmentToolBar->addAction(topAlignmentAction);
+    alignmentToolBar->addAction(bottomAlignmentAction);
+    alignmentToolBar->addSeparator();
 }
 void MainWindow::createStatusBar()
 {
@@ -318,6 +372,7 @@ void MainWindow::open()
         if(!fileName.isEmpty())
 			loadFile(fileName);
 	}
+    setWindowModified(false);
 }
 bool MainWindow::loadFile(const QString &fileName)
 {
@@ -377,6 +432,17 @@ bool MainWindow::saveAs()
 	}
 	return saveFile(fileName);
 }
+void MainWindow::print()
+{
+    QPrinter printer;
+    QPrintDialog printDialog(&printer,this);
+    if(printDialog.exec())
+    {
+        QTextDocument *text = sheet->getContext();
+        text->print(&printer);
+    }
+}
+
 void MainWindow::closeEvent(QCloseEvent *event)
 {
 	if(okToContinue())
@@ -499,9 +565,11 @@ void MainWindow::setFont()
        sheet->setFont(font);
     }
 }
+
 void MainWindow::setLeftAlignment()
 {
-    int alignmentCode = Qt::AlignLeft;
+    int alignmentCode = Qt::AlignLeft | Qt::AlignVCenter;
+    //if not indicated, the alignment type should be center in vertical
     sheet->setAlignment(alignmentCode);
 }
 void MainWindow::setCenterAlignment()
@@ -511,30 +579,72 @@ void MainWindow::setCenterAlignment()
 }
 void MainWindow::setRightAlignment()
 {
-    int alignmentCode = Qt::AlignRight;
+    int alignmentCode = Qt::AlignRight | Qt::AlignVCenter;
     sheet->setAlignment(alignmentCode);
+}
+void MainWindow::setTopAlignment()
+{
+    int alignmentCode = Qt::AlignTop | Qt::AlignHCenter;
+    //if not indicated, the alignment type should be center in horizon
+    sheet->setAlignment(alignmentCode);
+}
+void MainWindow::setBottomAlignment()
+{
+    int alignmentCode = Qt::AlignBottom | Qt::AlignHCenter;
+    sheet->setAlignment(alignmentCode);
+}
+
+QIcon MainWindow::setIconColor(QIcon &icon,QColor color)
+{
+    QSize suitableSize(70,50);//The size is suitable for toolbar
+    QPixmap pixmapColor(suitableSize);
+    pixmapColor.fill(color);
+    icon.addPixmap(pixmapColor);
+    return icon;
 }
 void MainWindow::setTextColor()
 {
-    QColor textColor = QColorDialog::getColor(Qt::black);
+    QColor curColor = sheet->currentItem()->textColor();
+    QColor textColor;
+    if(curColor.isValid())
+        textColor = QColorDialog::getColor(curColor);
+    //set default color of QColorDialog to the current color,
+    //if the color of cell has been changed
+    else
+        textColor = QColorDialog::getColor(Qt::black);
     if(textColor.isValid())
     {
         sheet->setTextColor(textColor);
+        textColorIcon = setIconColor(textColorIcon,textColor);
+        textColorIconAction->setIcon(textColorIcon);
+        formatToolBar->updateGeometry();
+        setWindowModified(false);
     }
 }
 void MainWindow::setBackgroundColor()
 {
-    QColor backgroundColor = QColorDialog::getColor(Qt::blue);
+    QColor curColor = sheet->currentItem()->backgroundColor();
+    QColor backgroundColor;
+    if(curColor.isValid())
+        backgroundColor = QColorDialog::getColor(curColor);
+    //set default color of QColorDialog to the current color,
+    //if the color of cell has been changed
+    else
+        backgroundColor = QColorDialog::getColor(Qt::white);
     if(backgroundColor.isValid())
     {
         sheet->setBackgroundColor(backgroundColor);
+        backgroundColorIcon = setIconColor(backgroundColorIcon,backgroundColor);
+        backgroundColorIconAction->setIcon(backgroundColorIcon);
+        formatToolBar->updateGeometry();
+        setWindowModified(false);
     }
 }
 
 void MainWindow::about()
 {
 	QMessageBox::about(this,tr("About EasyTable"),
-        tr("<h1>EasyTable 0.1</h1>"
+        tr("<h1>EasyTable 0.2</h1>"
 		"<p>Copyleft &copy; BugMore Software Inc."));
 }
 void MainWindow::writeSettings()

@@ -8,13 +8,15 @@
 #include <QStringList>
 #include <QtAlgorithms>
 #include <QTableWidget>
+#include <QTextDocument>
 #include "cell.h"
 
 EasyTable::EasyTable(QWidget *parent) :
     QTableWidget(parent)
 {
     autoRecalc = true;
-    RowCount = 199;
+    defaultAlignment = true;
+    RowCount = 64;
     ColumnCount = 20;
     setItemPrototype(new Cell);
     setSelectionMode(ContiguousSelection);
@@ -37,6 +39,34 @@ void EasyTable::clear()
     setColumnCount(0);
     setRowCount(RowCount);
     setColumnCount(ColumnCount);
+    if(defaultAlignment == false)
+    {
+        //use i for column and j for row
+        //because ColumnCount is much larger than RowCount.
+        //In other places,I use i for row and j for column
+        //just because the APIs of Qt require (int row,int column)
+        //instead of (int column,int row)
+        for(int i = 0;i<ColumnCount;i++)
+        {
+            for(int j = 0;j<RowCount;j++)
+            {
+                setFormula(j,i,"");
+                Cell *c = cell(j,i);
+                if(c != nullptr)
+                {
+                    c->setDefaultAlignment(false);
+                }
+            }
+        }
+    }
+    else
+    {
+        for(int i = 0;i<ColumnCount;i++)
+        {
+            for(int j = 0;j<RowCount;j++)
+                setFormula(j,i,"");
+        }
+    }
     setHeaderItem();
     setCurrentCell(0,0);
 }
@@ -111,8 +141,9 @@ bool EasyTable::writeFile(const QString &fileName)
     QDataStream out(&file);
     out.setVersion(QDataStream::Qt_4_8);//version is 4.8
     out<<quint32(RECOGNITIONNUMBER);
-    //quint/qint强制转化数据大小，使数据获得应有的大小。recognitionNumber是一个位于文件开始
-    //的随机数，确定文件格式
+    //quint/qint transforms data size compulsory to its appropriate size.
+    //RECOGNITIONNUMBER is a magicnumber in the beginning of file,
+    //which decides the type of file.
     QApplication::setOverrideCursor(Qt::WaitCursor);
     for(int row = 0;row<RowCount;row++)
     {
@@ -156,15 +187,40 @@ bool EasyTable::readFile(const QString &fileName)
     while(!in.atEnd())
     {
         in>>row>>column>>str;
+        if(row >= RowCount || column >= ColumnCount)
+        {
+            clear();
+            ColumnCount = (ColumnCount+5>26 ? 26 : ColumnCount+15);
+            RowCount += 50;
+            readFile(fileName);
+        }
         setFormula(row,column,str);
     }
     QApplication::restoreOverrideCursor();
     return true;
 }
 
+QTextDocument *EasyTable::getContext()
+{
+    QString str;
+    for(int i = 0;i<RowCount;i++)
+    {
+        if(i>0)
+            str += '\n';
+        for(int j = 0;j<ColumnCount;j++)
+        {
+            if(j>0)
+                str += '\t';
+            str += formula(i,j);
+        }//end for column
+    }//end for row
+    context = new QTextDocument(str,this);
+    return context;
+}
+
 QTableWidgetSelectionRange EasyTable::selectedRange()const
 {
-    QList<QTableWidgetSelectionRange> ranges=selectedRanges();
+    QList<QTableWidgetSelectionRange> ranges = selectedRanges();
     if(ranges.isEmpty())
         return QTableWidgetSelectionRange();
     return ranges.first();
@@ -205,7 +261,7 @@ void EasyTable::paste()
         QMessageBox::information(this,tr("EasyTable"),
                                  tr("数据无法复制或粘贴\n"
                                    "因为数据复制或粘贴"
-                                   "的区域大小不合适"));//
+                                   "的区域大小不合适"));
         return;
     }
     for(int i = 0;i<numRows;i++)
@@ -215,7 +271,7 @@ void EasyTable::paste()
         {
             int row = range.topRow()+i;
             int column = range.leftColumn()+j;
-            if(row<RowCount&&column<ColumnCount)
+            if(row<RowCount && column<ColumnCount)
                 setFormula(row,column,columns[j]);
         }//end for column
     }//end for row
@@ -238,6 +294,13 @@ void EasyTable::rowInsert()
 }
 void EasyTable::columnInsert()
 {
+    if(ColumnCount >= 26)
+    {
+      QMessageBox::information(this,tr("EasyTable"),
+                               tr("无法插入新列\n"
+                                 "因为预定的列数已用完"));
+      return;
+    }
     insertColumn(1);
     ColumnCount += 1;
     setHeaderItem();
@@ -295,6 +358,7 @@ void EasyTable::findPrevious(const QString &str, Qt::CaseSensitivity cs)
     }
     QApplication::beep();
 }
+
 void EasyTable::recalculate()
 {
     for(int column = 0;column<ColumnCount;column++)
@@ -313,10 +377,94 @@ void EasyTable::setAutoRecalculate(bool recalc)
     if(autoRecalc)
         recalculate();
 }
+bool EasyTable::getDefaultAlignment()
+{
+    return defaultAlignment;
+}
+void EasyTable::setDefaultAlignment(bool ok)
+{
+    defaultAlignment = ok;
+    QApplication::setOverrideCursor(Qt::WaitCursor);
+    if(ok == false)
+    {
+        for(int i = 0;i<RowCount;i++)
+        {
+            for(int j = 0;j<ColumnCount;j++)
+            {
+                Cell *c = cell(i,j);
+                if(c != nullptr)
+                    c->setDefaultAlignment(false);
+            }//end for column
+        }//end for row
+    }//end if
+    else
+    {
+        for(int i = 0;i<RowCount;i++)
+        {
+            for(int j = 0;j<ColumnCount;j++)
+            {
+                Cell *c = cell(i,j);
+                if(c != nullptr)
+                    c->setDefaultAlignment(true);
+            }//end for column
+        }//end for row
+    }//end else
+    QApplication::restoreOverrideCursor();
+}
+
 void EasyTable::sort(const EasyTableCompare &compare)
 {
-    QList<QStringList> rows;
+
     QTableWidgetSelectionRange range = selectedRange();
+    int choice = QMessageBox::question(this,tr("排序"),
+                                       tr("发现您只选取了一部分区域。\n"
+                                           "我们将自动扩展排序的范围。\n"
+        "是否同意?"),
+        QMessageBox::Yes|QMessageBox::No|QMessageBox::Cancel);
+    switch(choice)
+    {
+    case QMessageBox::Yes:
+        QApplication::setOverrideCursor(Qt::WaitCursor);
+        selectAll();
+        columnSort(compare,range);
+        QApplication::restoreOverrideCursor();
+        somethingChanged();
+        break;
+    case QMessageBox::No:
+        defaultSort(compare,range);
+        somethingChanged();
+        break;
+    case QMessageBox::Cancel:
+        break;
+    default:
+        break;
+    }
+    clearSelection();
+}
+void EasyTable::columnSort(const EasyTableCompare &compare, const QTableWidgetSelectionRange &range)
+{
+    QList<QStringList> rows;
+    int i;
+    for(i = 0;i<range.rowCount();i++)
+    {
+        QStringList row;
+        for(int j = 0;j<ColumnCount;j++)
+            row.append(formula(range.topRow()+i,
+                               range.leftColumn()+j));
+        rows.append(row);
+    }
+    qStableSort(rows.begin(),rows.end(),compare);
+    for(i = 0;i<range.rowCount();i++)
+    {
+        for(int j = 0;j<ColumnCount;j++)
+            setFormula(range.topRow()+i,range.leftColumn()+j,
+                       rows[i][j]);
+    }
+    setCurrentCell(0,0);
+}
+void EasyTable::defaultSort(const EasyTableCompare &compare, const QTableWidgetSelectionRange &range)
+{
+    QList<QStringList> rows;
     int i;
     for(i = 0;i<range.rowCount();i++)
     {
@@ -333,8 +481,6 @@ void EasyTable::sort(const EasyTableCompare &compare)
             setFormula(range.topRow()+i,range.leftColumn()+j,
                        rows[i][j]);
     }
-    clearSelection();
-    somethingChanged();
 }
 
 bool EasyTableCompare::operator ()(const QStringList& row1,
@@ -395,9 +541,7 @@ void EasyTable::setAlignment(int alignment)
             Cell *c = cell(range.topRow()+i,range.leftColumn()+j);
             if(c != nullptr)
             {
-                c->closeDefaultAlignment();
-                c->setTextAlignment(Qt::AlignVCenter);
-                //if not indicated, the alignment type should be center in vertical
+                c->setDefaultAlignment(false);
                 c->setTextAlignment(alignment);
             }
         }//end for column

@@ -5,6 +5,7 @@
 
 class Cell;
 class EasyTableCompare;
+class QTextDocument;
 
 class EasyTable : public QTableWidget
 {
@@ -23,6 +24,7 @@ public:
     void setAlignment(int alignment);
     void setTextColor(QColor &textColor);
     void setBackgroundColor(QColor &backgroundColor);
+    bool getDefaultAlignment();
 signals:
     void modified();
 public slots:
@@ -37,7 +39,9 @@ public slots:
     void recalculate();
     void setAutoRecalculate(bool recalc);
     void findNext(const QString &str,Qt::CaseSensitivity cs);
-    void findPrevious(const QString &str,Qt::CaseSensitivity cs);    
+    void findPrevious(const QString &str,Qt::CaseSensitivity cs);
+    void setDefaultAlignment(bool ok);
+    QTextDocument* getContext();
 private slots:
     void somethingChanged();
 private:
@@ -47,8 +51,12 @@ private:
     QString text(int row,int column) const;
     QString formula(int row,int column) const;
     void setFormula(int row,int column,const QString &formula);
+    void columnSort(const EasyTableCompare &compare,const QTableWidgetSelectionRange &range);
+    void defaultSort(const EasyTableCompare &compare,const QTableWidgetSelectionRange &range);
     void setHeaderItem();
     bool autoRecalc;
+    bool defaultAlignment;
+    QTextDocument* context;
 };
 
 class EasyTableCompare

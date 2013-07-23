@@ -12,7 +12,7 @@ public:
     void setData(int role, const QVariant &value);
     QVariant data(int role) const;
     void setFormula(const QString& formula);
-    void closeDefaultAlignment();
+    void setDefaultAlignment(bool ok = false);
     QString formula() const;
     void setDirty();
 private:

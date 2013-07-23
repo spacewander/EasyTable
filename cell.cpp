@@ -31,9 +31,9 @@ void Cell::setDirty()
 {
     cacheIsDirty = true;
 }
-void Cell::closeDefaultAlignment()
+void Cell::setDefaultAlignment(bool ok)
 {
-    defaultAlignment = false;
+    defaultAlignment = ok;
 }
 QVariant Cell::data(int role) const
 {

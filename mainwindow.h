@@ -4,6 +4,7 @@
 #include <QMainWindow>
 class QAction;
 class QLabel;
+class QIcon;
 class FindDialog;
 class EasyTable;
 class GotoCellDialog;
@@ -22,6 +23,7 @@ protected:
 		void open();
 		bool save();
 		bool saveAs();
+        void print();
 		void find();
 		void goToCell();
 		void sort();
@@ -34,6 +36,8 @@ protected:
         void setLeftAlignment();
         void setCenterAlignment();
         void setRightAlignment();
+        void setTopAlignment();
+        void setBottomAlignment();
         void setTextColor();
         void setBackgroundColor();
 private:
@@ -58,6 +62,9 @@ private:
 	QLabel *formulaLabel;
     QStringList recentFiles;
 	QString curFile;
+    QIcon textColorIcon;
+    QIcon backgroundColorIcon;
+    QIcon setIconColor(QIcon &icon, QColor color);
 
     enum{MaxRecentFiles = 5};
 	QAction *recentFileActions[MaxRecentFiles];
@@ -69,10 +76,14 @@ private:
 	QMenu *toolsMenu;
 	QMenu *optionsMenu;
 	QMenu *helpMenu;
+    QMenu *alignmentSubMenu;
+    QMenu *insertSubMenu;
+    QMenu *chooseSubMenu;
 
 	QToolBar *fileToolBar;
 	QToolBar *editToolBar;
     QToolBar *formatToolBar;
+    QToolBar *alignmentToolBar;
 
 	QAction *newAction;
 	QAction *openAction;
@@ -80,6 +91,7 @@ private:
 	QAction *saveAsAction;
 	QAction *closeAction;
 	QAction *exitAction;
+    QAction *printAction;
     QMenu *recentFilesSubMenu;
 
 	QAction *cutAction;
@@ -100,15 +112,20 @@ private:
 
 	QAction *autoRecalcAction;
 	QAction *showGridAction;
+    QAction *defaultAlignmentAction;
 
 	QAction *aboutAction;
 
     QAction *fontAction;
     QAction *textColorAction;
+    QAction *textColorIconAction;
+    QAction *backgroundColorIconAction;
     QAction *backgroundColorAction;
     QAction *leftAlignmentAction;
     QAction *centerAlignmentAction;
     QAction *rightAlignmentAction;
+    QAction *topAlignmentAction;
+    QAction *bottomAlignmentAction;
 };
 
 #endif // MAINWINDOW_H
