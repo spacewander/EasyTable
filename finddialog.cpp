@@ -63,6 +63,7 @@ void FindDialog::findClicked()
         emit findNext(text,cs);
     }
 }
+
 void FindDialog::enableFindButton(const QString &text)
 {
     findButton->setEnabled(!text.isEmpty());

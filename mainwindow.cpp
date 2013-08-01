@@ -644,7 +644,7 @@ void MainWindow::setBackgroundColor()
 void MainWindow::about()
 {
 	QMessageBox::about(this,tr("About EasyTable"),
-        tr("<h1>EasyTable 0.2</h1>"
+        tr("<h1>EasyTable 0.3</h1>"
 		"<p>Copyleft &copy; BugMore Software Inc."));
 }
 void MainWindow::writeSettings()
