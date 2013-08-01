@@ -18,36 +18,42 @@ public:
 	~MainWindow();
 protected:
 	void closeEvent(QCloseEvent* event);
-	private slots:
+private slots:
 		void newFile();
 		void open();
 		bool save();
 		bool saveAs();
-        void print();
-		void find();
-		void goToCell();
-		void sort();
-		void about();
 		void openRecentFile();
 		void closeAllWindows();
+
 		void updateStatusBar();
         void sheetModified();
+
+        void print();
+        void find();
+        void goToCell();
+        void sort();
+        void about();
+
         void setFont();
+        void setTextColor();
+        void setBackgroundColor();
+
         void setLeftAlignment();
         void setCenterAlignment();
         void setRightAlignment();
         void setTopAlignment();
         void setBottomAlignment();
-        void setTextColor();
-        void setBackgroundColor();
 private:
 	void createActions();
 	void createMenus();
 	void createContextMenu();
 	void createToolBars();
 	void createStatusBar();
+
 	void readSettings();
 	void writeSettings();
+
 	bool okToContinue();
 	bool loadFile(const QString &fileName);
 	bool saveFile(const QString &fileName);
@@ -55,16 +61,20 @@ private:
 	void setCurrentFile(const QString &fileName);
 	void updateRecentFileActions();
 	QString strippedName(const QString &fullFileName);
+
     EasyTable *sheet;
 	FindDialog *findDialog;
     GotoCellDialog *toCell;
+
 	QLabel *locationLabel;
 	QLabel *formulaLabel;
+
     QStringList recentFiles;
 	QString curFile;
+
     QIcon textColorIcon;
     QIcon backgroundColorIcon;
-    QIcon setIconColor(QIcon &icon, QColor color);
+    QIcon &setIconColor(QIcon &icon, QColor color);
 
     enum{MaxRecentFiles = 5};
 	QAction *recentFileActions[MaxRecentFiles];
@@ -76,6 +86,7 @@ private:
 	QMenu *toolsMenu;
 	QMenu *optionsMenu;
 	QMenu *helpMenu;
+
     QMenu *alignmentSubMenu;
     QMenu *insertSubMenu;
     QMenu *chooseSubMenu;
@@ -121,6 +132,7 @@ private:
     QAction *textColorIconAction;
     QAction *backgroundColorIconAction;
     QAction *backgroundColorAction;
+
     QAction *leftAlignmentAction;
     QAction *centerAlignmentAction;
     QAction *rightAlignmentAction;

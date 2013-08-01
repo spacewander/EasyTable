@@ -4,11 +4,13 @@
 #include <QDataStream>
 #include <QFile>
 #include <QFont>
+
 #include <QMessageBox>
 #include <QStringList>
 #include <QtAlgorithms>
 #include <QTableWidget>
 #include <QTextDocument>
+
 #include "cell.h"
 
 EasyTable::EasyTable(QWidget *parent) :
@@ -16,8 +18,8 @@ EasyTable::EasyTable(QWidget *parent) :
 {
     autoRecalc = true;
     defaultAlignment = true;
-    RowCount = 64;
-    ColumnCount = 20;
+    RowCount = 32;
+    ColumnCount = 12;
     setItemPrototype(new Cell);
     setSelectionMode(ContiguousSelection);
     connect(this,SIGNAL(itemChanged(QTableWidgetItem*)),
@@ -43,17 +45,12 @@ void EasyTable::clear()
     setColumnCount(ColumnCount);
     if(defaultAlignment == false)
     {
-        //use i for column and j for row
-        //because ColumnCount is much larger than RowCount.
-        //In other places,I use i for row and j for column
-        //just because the APIs of Qt require (int row,int column)
-        //instead of (int column,int row)
-        for(int i = 0;i<ColumnCount;i++)
+        for(int i = 0;i<RowCount;i++)
         {
-            for(int j = 0;j<RowCount;j++)
+            for(int j = 0;j<ColumnCount;j++)
             {
-                setFormula(j,i,"");
-                Cell *c = cell(j,i);
+                setFormula(i,j,"");
+                Cell *c = cell(i,j);
                 if(c != nullptr)
                 {
                     c->setDefaultAlignment(false);
@@ -63,10 +60,10 @@ void EasyTable::clear()
     }
     else
     {
-        for(int i = 0;i<ColumnCount;i++)
+        for(int i = 0;i<RowCount;i++)
         {
-            for(int j = 0;j<RowCount;j++)
-                setFormula(j,i,"");
+            for(int j = 0;j<ColumnCount;j++)
+                setFormula(i,j,"");
         }
     }
     setHeaderItem();
@@ -77,6 +74,7 @@ Cell* EasyTable::cell(int row, int column) const
 {
     return static_cast<Cell*>(item(row,column));
 }
+
 QString EasyTable::text(int row, int column) const
 {
     Cell *c = cell(row,column);
@@ -307,6 +305,7 @@ void EasyTable::rowInsert()
     insertRow(1);
     RowCount += 1;
 }
+
 void EasyTable::columnInsert()
 {
     if(ColumnCount >= 26)
@@ -329,6 +328,29 @@ void EasyTable::selectCurrentRow()
 void EasyTable::selectCurrentColumn()
 {
     selectColumn(currentColumn());
+}
+
+void EasyTable::findInAll(const QString &str, Qt::CaseSensitivity cs)
+{
+    int row = 0;
+    int column = 0;
+    while(row<RowCount)
+    {
+        while(column<ColumnCount)
+        {
+            if(text(row,column).contains(str,cs))
+            {
+                clearSelection();
+                setCurrentCell(row,column);
+                activateWindow();
+                return;
+            }
+            column++;
+        }
+        column = 0;
+        row++;
+    }
+    QApplication::beep();
 }
 
 void EasyTable::findNext(const QString &str, Qt::CaseSensitivity cs)
@@ -371,7 +393,7 @@ void EasyTable::findPrevious(const QString &str, Qt::CaseSensitivity cs)
             }
             column--;
         }
-        column=ColumnCount-1;
+        column = ColumnCount-1;
         row--;
     }
     QApplication::beep();

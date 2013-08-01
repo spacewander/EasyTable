@@ -4,24 +4,28 @@
 #include <QCloseEvent>
 #include <QDialog>
 #include <QEvent>
+
 #include <QFileDialog>
 #include <QFontDialog>
 #include <QIcon>
 #include <QLabel>
 #include <QList>
 #include <QLineEdit>
+
 #include <QMenu>
 #include <QMenuBar>
 #include <QMessageBox>
 #include <QPainter>
 #include <QPrintDialog>
 #include <QPrinter>
+
 #include <QSettings>
 #include <QStatusBar>
 #include <QTableWidgetSelectionRange>
 #include <QTextDocument>
 #include <QToolBar>
 #include <QWidget>
+
 #include "easytable.h"
 #include "finddialog.h"
 #include "gotocelldialog.h"
@@ -39,7 +43,7 @@ MainWindow::MainWindow(QWidget *parent)
 	createStatusBar();
 	createToolBars();
 	readSettings();
-    findDialog = 0;
+    findDialog = nullptr;
     setCurrentFile(tr("未命名"));
 }
 
@@ -190,6 +194,7 @@ void MainWindow::createActions()
 	connect(aboutAction,SIGNAL(triggered()),this,SLOT(about()));
 
 }
+
 void MainWindow::createMenus()
 {
     fileMenu = menuBar()->addMenu(tr("文件"));
@@ -239,6 +244,7 @@ void MainWindow::createMenus()
     helpMenu = menuBar()->addMenu(tr("帮助"));
 	helpMenu->addAction(aboutAction);
 }
+
 void MainWindow::createContextMenu()
 {
     sheet->addAction(cutAction);
@@ -269,6 +275,7 @@ void MainWindow::createContextMenu()
     sheet->addAction(chooseSubMenu->menuAction());
     sheet->setContextMenuPolicy(Qt::ActionsContextMenu);
 }
+
 void MainWindow::createToolBars()
 {
     fileToolBar = addToolBar(tr("文件"));
@@ -306,6 +313,7 @@ void MainWindow::createToolBars()
     alignmentToolBar->addAction(bottomAlignmentAction);
     alignmentToolBar->addSeparator();
 }
+
 void MainWindow::createStatusBar()
 {
     locationLabel = new QLabel(" ");
@@ -323,16 +331,19 @@ void MainWindow::createStatusBar()
     connect(sheet,SIGNAL(modified()),this,SLOT(sheetModified()));
 	updateStatusBar();
 }
+
 void MainWindow::updateStatusBar()
 {
     locationLabel->setText(sheet->currentLocation());
     formulaLabel->setText(sheet->currentFormula());
 }
+
 void MainWindow::sheetModified()
 {
     setWindowModified(true);
 	updateStatusBar();
 }
+
 void MainWindow::newFile()
 {
 	if(okToContinue())
@@ -340,7 +351,9 @@ void MainWindow::newFile()
         sheet->clear();
 		setCurrentFile("");
 	}
+    setWindowModified(false);
 }
+
 bool MainWindow::okToContinue()
 {
 	if(isWindowModified())
@@ -361,6 +374,7 @@ bool MainWindow::okToContinue()
 	}
 	return true;
 }
+
 void MainWindow::open()
 {
 	if(okToContinue())
@@ -374,6 +388,7 @@ void MainWindow::open()
 	}
     setWindowModified(false);
 }
+
 bool MainWindow::loadFile(const QString &fileName)
 {
     if(!sheet->readFile(fileName))
@@ -385,6 +400,7 @@ bool MainWindow::loadFile(const QString &fileName)
     statusBar()->showMessage(tr("加载文件"),2000);
 	return true;
 }
+
 bool MainWindow::save()
 {
     if(curFile.isEmpty() || curFile == tr("未命名"))
@@ -396,6 +412,7 @@ bool MainWindow::save()
 		return saveFile(curFile);
 	}
 }
+
 bool MainWindow::saveFile(const QString &fileName)
 {
     if(!sheet->writeFile(fileName))
@@ -408,6 +425,7 @@ bool MainWindow::saveFile(const QString &fileName)
     setWindowModified(false);
 	return true;
 }
+
 bool MainWindow::saveAsFile(const QString &fileName)
 {
     if(!sheet->writeFile(fileName))
@@ -420,6 +438,7 @@ bool MainWindow::saveAsFile(const QString &fileName)
     setWindowModified(false);
 	return true;
 }
+
 bool MainWindow::saveAs()
 {
     QString fileName = QFileDialog::getSaveFileName(
@@ -432,6 +451,7 @@ bool MainWindow::saveAs()
 	}
 	return saveFile(fileName);
 }
+
 void MainWindow::print()
 {
     QPrinter printer;
@@ -455,6 +475,7 @@ void MainWindow::closeEvent(QCloseEvent *event)
 		event->ignore();
 	}
 }
+
 void MainWindow::setCurrentFile(const QString &fileName)
 {
     curFile = fileName;
@@ -468,10 +489,12 @@ void MainWindow::setCurrentFile(const QString &fileName)
 	}
     setWindowTitle(tr("%1[*]-%2").arg(shownName).arg(tr("sheet")));
 }
+
 QString MainWindow::strippedName(const QString &fullFileName)
 {
 	return QFileInfo(fullFileName).fileName();
 }
+
 void MainWindow::updateRecentFileActions()
 {
 	QMutableStringListIterator i(recentFiles);
@@ -497,6 +520,7 @@ void MainWindow::updateRecentFileActions()
 	}
 	separatorAction->setVisible(!recentFiles.isEmpty());
 }
+
 void MainWindow::openRecentFile()
 {
 	if(okToContinue())
@@ -506,6 +530,7 @@ void MainWindow::openRecentFile()
 			loadFile(action->data().toString());
 	}
 }
+
 void MainWindow::closeAllWindows()
 {
         QAction *action = qobject_cast<QAction *>(sender());
@@ -522,16 +547,22 @@ void MainWindow::find()
 			Qt::CaseSensitivity)),
             sheet,SLOT(findNext(const QString&,
 			Qt::CaseSensitivity)));
+
 		connect(findDialog,SIGNAL(findPrevious(const QString&,
 			Qt::CaseSensitivity)),
             sheet,SLOT(findPrevious(const QString&,
 			Qt::CaseSensitivity)));
 
+        connect(findDialog,SIGNAL(findInAll(const QString&,
+            Qt::CaseSensitivity)),
+            sheet,SLOT(findInAll(const QString&,
+            Qt::CaseSensitivity)));
 	}
 	findDialog->show();
 	findDialog->raise();
     findDialog->activateWindow();
 }
+
 void MainWindow::goToCell()
 {
     GotoCellDialog toCell(this);
@@ -542,6 +573,7 @@ void MainWindow::goToCell()
 			str[0].unicode()-'A');
 	}
 }
+
 void MainWindow::sort()
 {
 	SortDialog dialog(this);
@@ -572,29 +604,33 @@ void MainWindow::setLeftAlignment()
     //if not indicated, the alignment type should be center in vertical
     sheet->setAlignment(alignmentCode);
 }
+
 void MainWindow::setCenterAlignment()
 {
     int alignmentCode = Qt::AlignCenter;
     sheet->setAlignment(alignmentCode);
 }
+
 void MainWindow::setRightAlignment()
 {
     int alignmentCode = Qt::AlignRight | Qt::AlignVCenter;
     sheet->setAlignment(alignmentCode);
 }
+
 void MainWindow::setTopAlignment()
 {
     int alignmentCode = Qt::AlignTop | Qt::AlignHCenter;
     //if not indicated, the alignment type should be center in horizon
     sheet->setAlignment(alignmentCode);
 }
+
 void MainWindow::setBottomAlignment()
 {
     int alignmentCode = Qt::AlignBottom | Qt::AlignHCenter;
     sheet->setAlignment(alignmentCode);
 }
 
-QIcon MainWindow::setIconColor(QIcon &icon,QColor color)
+QIcon& MainWindow::setIconColor(QIcon &icon,QColor color)
 {
     QSize suitableSize(70,50);//The size is suitable for toolbar
     QPixmap pixmapColor(suitableSize);
@@ -602,6 +638,7 @@ QIcon MainWindow::setIconColor(QIcon &icon,QColor color)
     icon.addPixmap(pixmapColor);
     return icon;
 }
+
 void MainWindow::setTextColor()
 {
     QColor curColor = sheet->currentItem()->textColor();
@@ -621,6 +658,7 @@ void MainWindow::setTextColor()
         setWindowModified(false);
     }
 }
+
 void MainWindow::setBackgroundColor()
 {
     QColor curColor = sheet->currentItem()->backgroundColor();
@@ -644,9 +682,10 @@ void MainWindow::setBackgroundColor()
 void MainWindow::about()
 {
 	QMessageBox::about(this,tr("About EasyTable"),
-        tr("<h1>EasyTable 0.3</h1>"
+        tr("<h1>EasyTable 0.2</h1>"
 		"<p>Copyleft &copy; BugMore Software Inc."));
 }
+
 void MainWindow::writeSettings()
 {
 	QSettings settings("BugMore Software Inc.","EasyTable");
@@ -655,6 +694,7 @@ void MainWindow::writeSettings()
 	settings.setValue("showGrid",showGridAction->isChecked());
 	settings.setValue("autoRecalc",autoRecalcAction->isChecked());
 }
+
 void MainWindow::readSettings()
 {
 	QSettings settings("BugMore Software Inc.","EasyTable");

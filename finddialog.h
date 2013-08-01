@@ -4,6 +4,8 @@
 #include <QDialog>
 
 class QCheckBox;
+class QRadioButton;
+class QGroupBox;
 class QLabel;
 class QLineEdit;
 class QPushButton;
@@ -17,6 +19,7 @@ public:
 signals:
     void findNext(const QString &str,Qt::CaseSensitivity cs);
     void findPrevious(const QString &str,Qt::CaseSensitivity cs);
+    void findInAll(const QString &str,Qt::CaseSensitivity cs);
 public slots:
     void findClicked();
     void enableFindButton(const QString &text);
@@ -24,7 +27,12 @@ private:
     QLabel *label;
     QLineEdit *lineEdit;
     QCheckBox *caseCheckBox;
-    QCheckBox *backwardCheckBox;
+
+    QRadioButton *backwardRadioButton;
+    QRadioButton *forwardRadioButton;
+    QRadioButton *findInAllRadioButton;
+    QGroupBox *radioButtonGroupBox;
+
     QPushButton *findButton;
     QPushButton *closeButton;
 };

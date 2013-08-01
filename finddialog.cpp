@@ -1,10 +1,13 @@
 ﻿#include "finddialog.h"
+
 #include <QDialog>
 #include <QLayout>
 #include <QLineEdit>
 #include <QLabel>
 #include <QPushButton>
 #include <QCheckBox>
+#include <QGroupBox>
+#include <QRadioButton>
 
 FindDialog::FindDialog(QWidget *parent) :
     QDialog(parent)
@@ -12,16 +15,30 @@ FindDialog::FindDialog(QWidget *parent) :
     label = new QLabel(tr("内容"));
     lineEdit = new QLineEdit;
     label->setBuddy(lineEdit);
-    caseCheckBox = new QCheckBox(tr("匹配"));
+    caseCheckBox = new QCheckBox(tr("大小写匹配"));
     caseCheckBox->setShortcut(QKeySequence::ExactMatch);
+
     findButton = new QPushButton(tr("查找"));
     findButton->setShortcut(QKeySequence::Find);
     findButton->setDefault(true);
     findButton->setEnabled(false);
-    backwardCheckBox = new QCheckBox(tr("查找前一个"));
-    backwardCheckBox->setShortcut(QKeySequence::FindPrevious);
     closeButton=new QPushButton(tr("关闭"));
     closeButton->setShortcut(QKeySequence::Close);
+
+    backwardRadioButton = new QRadioButton(tr("向前查找"));
+    backwardRadioButton->setShortcut(QKeySequence::FindPrevious);
+    forwardRadioButton = new QRadioButton(tr("向后查找"));
+    forwardRadioButton->setShortcut(QKeySequence::FindNext);
+    findInAllRadioButton = new QRadioButton(tr("全文件查找"));
+    findInAllRadioButton->setShortcut(QKeySequence::Find);
+
+    radioButtonGroupBox = new QGroupBox(tr("查找条件组"));
+    QVBoxLayout *groupBoxLayout = new QVBoxLayout;
+    groupBoxLayout->addWidget(backwardRadioButton);
+    groupBoxLayout->addWidget(forwardRadioButton);
+    groupBoxLayout->addWidget(findInAllRadioButton);
+    radioButtonGroupBox->setLayout(groupBoxLayout);
+
 
     connect(lineEdit, SIGNAL(textChanged(const QString &)),this,
             SLOT(enableFindButton(const QString &)));
@@ -31,14 +48,17 @@ FindDialog::FindDialog(QWidget *parent) :
     QHBoxLayout *topLeftLayout = new QHBoxLayout;
     topLeftLayout->addWidget(label);
     topLeftLayout->addWidget(lineEdit);
+
     QVBoxLayout *leftLayout = new QVBoxLayout;
     leftLayout->addLayout(topLeftLayout);
     leftLayout->addWidget(caseCheckBox);
-    leftLayout->addWidget(backwardCheckBox);
+    leftLayout->addWidget(radioButtonGroupBox);
+
     QVBoxLayout *rightLayout = new QVBoxLayout;
     rightLayout->addWidget(findButton);
     rightLayout->addWidget(closeButton);
     rightLayout->addStretch();
+
     QHBoxLayout *mainLayout = new QHBoxLayout;
     mainLayout->addLayout(leftLayout);
     mainLayout->addLayout(rightLayout);
@@ -52,15 +72,19 @@ void FindDialog::findClicked()
 {
     QString text=lineEdit->text();
     Qt::CaseSensitivity cs=
-            caseCheckBox->isChecked()?Qt::CaseSensitive
-                                    :Qt::CaseInsensitive;
-    if(backwardCheckBox->isChecked())
+            caseCheckBox->isChecked() ? Qt::CaseSensitive
+                                      : Qt::CaseInsensitive;
+    if(backwardRadioButton->isChecked())
     {
         emit findPrevious(text,cs);
     }
-    else
+    else if(forwardRadioButton->isChecked())
     {
         emit findNext(text,cs);
+    }
+    else
+    {
+        emit findInAll(text,cs);
     }
 }
 
