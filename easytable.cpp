@@ -19,7 +19,7 @@ EasyTable::EasyTable(QWidget *parent) :
     autoRecalc = true;
     defaultAlignment = true;
     RowCount = 32;
-    ColumnCount = 12;
+    ColumnCount = 18;
     setItemPrototype(new Cell);
     setSelectionMode(ContiguousSelection);
     connect(this,SIGNAL(itemChanged(QTableWidgetItem*)),
@@ -198,7 +198,7 @@ bool EasyTable::readFile(const QString &fileName)
         if(row >= RowCount || column >= ColumnCount)
         {
             clear();
-            ColumnCount = (ColumnCount+5>26 ? 26 : ColumnCount+15);
+            ColumnCount = (ColumnCount+5 > 26 ? 26 : ColumnCount+15);
             RowCount += 50;
             readFile(fileName);
         }
@@ -208,7 +208,7 @@ bool EasyTable::readFile(const QString &fileName)
     return true;
 }
 
-QTextDocument *EasyTable::getContext()
+QTextDocument *EasyTable::getContextForPrint()
 {
     QString str;
     for(int i = 0;i<RowCount;i++)
@@ -298,6 +298,16 @@ void EasyTable::del()
             delete item;
         somethingChanged();
     }
+}
+
+int EasyTable::getRowCount()
+{
+    return RowCount;
+}
+
+int EasyTable::getColumnCount()
+{
+    return ColumnCount;
 }
 
 void EasyTable::rowInsert()

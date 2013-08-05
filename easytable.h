@@ -29,6 +29,9 @@ public:
 
     bool getDefaultAlignment();
     bool autoRecalculate() const{return autoRecalc;}
+
+    int getRowCount();
+    int getColumnCount();
 signals:
     void modified();
 public slots:
@@ -51,12 +54,12 @@ public slots:
     void findInAll(const QString &str,Qt::CaseSensitivity cs);
 
     void setDefaultAlignment(bool ok);
-    QTextDocument* getContext();//get context for print
+    QTextDocument* getContextForPrint();//get context for print
 private slots:
     void somethingChanged();
 private:
-    enum{RECOGNITIONNUMBER =0x7F51C883};//set the magicnumber of sheet
-    static int RowCount,ColumnCount;
+    enum{RECOGNITIONNUMBER = 0x7F51C883};//set the magicnumber of sheet
+    int RowCount,ColumnCount;//decide the range of a sheet
 
     Cell* cell(int row,int column) const;
     QString text(int row,int column) const;

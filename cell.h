@@ -9,17 +9,22 @@ class Cell : public QTableWidgetItem
 public:
     explicit Cell();
     QTableWidgetItem *clone() const;
+
     void setData(int role, const QVariant &value);
     QVariant data(int role) const;
-    void setFormula(const QString& formula);
-    void setDefaultAlignment(bool ok = false);
-    QString formula() const;
     void setDirty();
+
+    void setFormula(const QString& formula);
+    QString formula() const;
+
+    void setDefaultAlignment(bool ok = false);
 private:
     QVariant value() const;
+
     QVariant evalExpression(const QString& str,int& pos) const;
     QVariant evalTerm(const QString& str,int& pos) const;
     QVariant evalFactor(const QString& str,int& pos) const;
+
     mutable QVariant cachedValue;
     mutable bool cacheIsDirty;
     bool defaultAlignment;

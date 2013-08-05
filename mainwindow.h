@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+
 class QAction;
 class QLabel;
 class QIcon;
@@ -15,16 +16,28 @@ class MainWindow : public QMainWindow
 
 public:
 	MainWindow(QWidget *parent = 0);
-	~MainWindow();
+    friend class MainWidget;
+    //I have to state MainWidget as the friend class of MainWindow,
+    //so that MainWidget is able to call the private methods of MainWindow
 protected:
 	void closeEvent(QCloseEvent* event);
+    void mousePressEvent(QMouseEvent *event);
+signals:
+        void updateRecentFileActions();
+        void updateRecentFiles(QString &fileName);
+        void exitApplication();
+        void closeSubWindow();
+        void showToolBar();
+        void hideToolBar();
+
 private slots:
 		void newFile();
 		void open();
 		bool save();
 		bool saveAs();
-		void openRecentFile();
-		void closeAllWindows();
+        void closeWindow();
+        void openRecentFile();
+        void closeAllWindow();
 
 		void updateStatusBar();
         void sheetModified();
@@ -58,15 +71,16 @@ private:
 	bool loadFile(const QString &fileName);
 	bool saveFile(const QString &fileName);
 	bool saveAsFile(const QString &fileName);
-	void setCurrentFile(const QString &fileName);
-	void updateRecentFileActions();
+    void setCurrentFile(const QString &fileName);
+    void refreshRecentFileActions();
+
 	QString strippedName(const QString &fullFileName);
 
     EasyTable *sheet;
 	FindDialog *findDialog;
     GotoCellDialog *toCell;
 
-	QLabel *locationLabel;
+    QLabel *locationLabel;
 	QLabel *formulaLabel;
 
     QStringList recentFiles;
@@ -77,8 +91,10 @@ private:
     QIcon &setIconColor(QIcon &icon, QColor color);
 
     enum{MaxRecentFiles = 5};
-	QAction *recentFileActions[MaxRecentFiles];
-	QAction *separatorAction;
+ //should be changed to be the same as the mainwidget
+    QAction *recentFileActions[MaxRecentFiles];
+    QAction *separatorAction;
+    QMenu *recentFilesSubMenu;
 
 	QMenu *fileMenu;
 	QMenu *editMenu;
@@ -97,13 +113,16 @@ private:
     QToolBar *alignmentToolBar;
 
 	QAction *newAction;
-	QAction *openAction;
+    QAction *openAction;
 	QAction *saveAction;
 	QAction *saveAsAction;
 	QAction *closeAction;
 	QAction *exitAction;
     QAction *printAction;
-    QMenu *recentFilesSubMenu;
+
+    QAction *minimizeAction;
+    QAction *maximizeAction;
+    QAction *normalizeAction;
 
 	QAction *cutAction;
 	QAction *copyAction;

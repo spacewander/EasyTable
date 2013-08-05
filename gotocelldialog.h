@@ -12,14 +12,18 @@ class GotoCellDialog : public QDialog
     Q_OBJECT
 public:
     explicit GotoCellDialog(QWidget *parent = 0);
-    QLabel *label;
-    QPushButton *okButton;
-    QPushButton *cancelButton;
-    QLineEdit *lineEdit;
+
+    int getRow();
+    int getColumn();
 signals:
     
 public slots:
     void on_lineEdit_textChanged();
+private:
+    QLabel *label;
+    QPushButton *okButton;
+    QPushButton *cancelButton;
+    QLineEdit *lineEdit;
 };
 
 #endif // GOTOCELLDIALOG_H

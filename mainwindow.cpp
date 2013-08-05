@@ -35,6 +35,7 @@
 MainWindow::MainWindow(QWidget *parent)
 	: QMainWindow(parent)
 {
+    setAttribute(Qt::WA_DeleteOnClose);
     sheet = new EasyTable;
     setCentralWidget(sheet);
 	createActions();
@@ -45,11 +46,6 @@ MainWindow::MainWindow(QWidget *parent)
 	readSettings();
     findDialog = nullptr;
     setCurrentFile(tr("未命名"));
-}
-
-MainWindow::~MainWindow()
-{
-
 }
 
 void MainWindow::createActions()
@@ -76,21 +72,34 @@ void MainWindow::createActions()
     connect(printAction,SIGNAL(triggered()),this,SLOT(print()));
 
     for(int i = 0;i<MaxRecentFiles;i++)
-	{
+    {
         recentFileActions[i] = new QAction(this);
-		recentFileActions[i]->setVisible(false);
-		connect(recentFileActions[i],SIGNAL(triggered()),
-			this,SLOT(openRecentFile()));
-	}
+        recentFileActions[i]->setVisible(false);
+        connect(recentFileActions[i],SIGNAL(triggered()),
+            this,SLOT(openRecentFile()));
+    }
 
     closeAction = new QAction(tr("&关闭"),this);
 	closeAction->setShortcut(QKeySequence::Close);
 	closeAction->setStatusTip(tr("关闭"));
-	connect(closeAction,SIGNAL(triggered()),this,SLOT(close()));
+    connect(closeAction,SIGNAL(triggered()),this,SLOT(closeWindow()));
     exitAction = new QAction(tr("退出"),this);
 	exitAction->setShortcut(tr("Ctrl+Q"));
 	exitAction->setStatusTip(tr("退出"));
-    connect(exitAction,SIGNAL(triggered()),this,SLOT(closeAllWindows()));//
+    connect(exitAction,SIGNAL(triggered()),this,SLOT(closeAllWindow()));
+
+    minimizeAction = new QAction(tr("最小化"),this);
+    minimizeAction->setShortcut(QKeySequence::ZoomOut);//use ctrl -
+    minimizeAction->setStatusTip(tr("最小化"));
+    connect(minimizeAction,SIGNAL(triggered()),this,SLOT(showMinimized()));
+    maximizeAction = new QAction(tr("最大化"),this);
+    maximizeAction->setShortcut(QKeySequence::ZoomIn);//use ctrl +
+    maximizeAction->setStatusTip(tr("最大化"));
+    connect(maximizeAction,SIGNAL(triggered()),this,SLOT(showMaximized()));
+    normalizeAction = new QAction(tr("向下还原"),this);
+    normalizeAction->setStatusTip(tr("还原"));
+    connect(normalizeAction,SIGNAL(triggered()),this,SLOT(showNormal()));
+
 
     cutAction = new QAction(tr("剪切"),this);
 	cutAction->setShortcut(QKeySequence::Cut);
@@ -197,6 +206,8 @@ void MainWindow::createActions()
 
 void MainWindow::createMenus()
 {
+    menuBar()->adjustSize();
+    menuBar()->setMinimumHeight(20);
     fileMenu = menuBar()->addMenu(tr("文件"));
 	fileMenu->addAction(newAction);
 	fileMenu->addAction(openAction);
@@ -204,14 +215,21 @@ void MainWindow::createMenus()
 	fileMenu->addAction(saveAsAction);
     fileMenu->addAction(closeAction);
     fileMenu->addAction(printAction);
+
     separatorAction = fileMenu->addSeparator();
     recentFilesSubMenu = new QMenu(tr("最近打开的文件"));
     for(int i = 0;i<MaxRecentFiles;i++)
-	{
+    {
         recentFilesSubMenu->addAction(recentFileActions[i]);
-	}
+    }
     fileMenu->addMenu(recentFilesSubMenu);
 	fileMenu->addSeparator();
+
+    fileMenu->addAction(minimizeAction);
+    fileMenu->addAction(maximizeAction);
+    fileMenu->addAction(normalizeAction);
+    fileMenu->addSeparator();
+
 	fileMenu->addAction(exitAction);
 
     editMenu = menuBar()->addMenu(tr("编辑"));
@@ -316,7 +334,7 @@ void MainWindow::createToolBars()
 
 void MainWindow::createStatusBar()
 {
-    locationLabel = new QLabel(" ");
+    locationLabel = new QLabel("Z999");
 	locationLabel->setAlignment(Qt::AlignHCenter);
 	locationLabel->setMinimumSize(locationLabel->sizeHint());
 
@@ -350,8 +368,8 @@ void MainWindow::newFile()
 	{
         sheet->clear();
 		setCurrentFile("");
+        return;
 	}
-    setWindowModified(false);
 }
 
 bool MainWindow::okToContinue()
@@ -359,8 +377,8 @@ bool MainWindow::okToContinue()
 	if(isWindowModified())
 	{
         int r = QMessageBox::warning(this,tr("EasyTable"),
-            tr("文件已经改变。\n"
-            "是否保存?"),
+            tr("%1 已经改变。\n"
+            "是否保存?").arg(strippedName(curFile)),
             QMessageBox::Yes|QMessageBox::No|QMessageBox::Cancel);
         if(QMessageBox::Yes == r)
 		{
@@ -386,18 +404,19 @@ void MainWindow::open()
         if(!fileName.isEmpty())
 			loadFile(fileName);
 	}
-    setWindowModified(false);
 }
 
 bool MainWindow::loadFile(const QString &fileName)
 {
     if(!sheet->readFile(fileName))
 	{
-        statusBar()->showMessage(tr("取消加载"),2000);
+        QString str = tr("%1 取消加载").arg(fileName);
+        statusBar()->showMessage(str,2000);//display for 2 sec
 		return false;
 	}
 	setCurrentFile(fileName);
-    statusBar()->showMessage(tr("加载文件"),2000);
+    QString str = tr("加载文件 %1").arg(fileName);
+    statusBar()->showMessage(str,2000);
 	return true;
 }
 
@@ -458,7 +477,7 @@ void MainWindow::print()
     QPrintDialog printDialog(&printer,this);
     if(printDialog.exec())
     {
-        QTextDocument *text = sheet->getContext();
+        QTextDocument *text = sheet->getContextForPrint();
         text->print(&printer);
     }
 }
@@ -476,16 +495,50 @@ void MainWindow::closeEvent(QCloseEvent *event)
 	}
 }
 
+void MainWindow::closeWindow()
+{
+    close();
+    emit closeSubWindow();
+}
+
+void MainWindow::mousePressEvent(QMouseEvent *event)
+{
+    if(event->y() <= 60)
+    {
+        if(event->button() == Qt::LeftButton)
+        {
+            emit showToolBar();
+            statusBar()->showMessage(tr("显示窗口菜单栏"));
+        }
+        else
+        {
+            emit hideToolBar();
+            statusBar()->showMessage(tr("隐藏窗口菜单栏"));
+        }
+    }
+}
+
 void MainWindow::setCurrentFile(const QString &fileName)
 {
     curFile = fileName;
+    setWindowModified(false);
     QString shownName = tr("未命名");
-    if((!curFile.isEmpty()) && (curFile != tr("未命名")))
+    if((!curFile.isEmpty()))
 	{
-        shownName = strippedName(curFile);
-		recentFiles.removeAll(curFile);
-		recentFiles.prepend(curFile);
-		updateRecentFileActions();
+        if(curFile != tr("未命名"))
+        {
+            shownName = strippedName(curFile);
+            recentFiles.removeAll(curFile);
+            recentFiles.prepend(curFile);
+            refreshRecentFileActions();
+            emit updateRecentFiles(curFile);
+            emit updateRecentFileActions();
+        }
+        else
+        {
+            refreshRecentFileActions();
+            emit updateRecentFileActions();
+        }
 	}
     setWindowTitle(tr("%1[*]-%2").arg(shownName).arg(tr("sheet")));
 }
@@ -495,47 +548,46 @@ QString MainWindow::strippedName(const QString &fullFileName)
 	return QFileInfo(fullFileName).fileName();
 }
 
-void MainWindow::updateRecentFileActions()
+void MainWindow::refreshRecentFileActions()
 {
-	QMutableStringListIterator i(recentFiles);
-	while(i.hasNext())
-	{
-		if(!QFile::exists(i.next()))
-			i.remove();
-	}
+    QMutableStringListIterator i(recentFiles);
+    while(i.hasNext())
+    {
+        if(!QFile::exists(i.next()))
+            i.remove();
+    }
     for(int j = 0;j<MaxRecentFiles;j++)
-	{
-		if(j<recentFiles.count())
-		{
+    {
+        if(j<recentFiles.count())
+        {
             QString text = tr("&%1 %2").arg(j+1)
-				.arg(strippedName(recentFiles[j]));
-			recentFileActions[j]->setText(text);
-			recentFileActions[j]->setData(recentFiles);
-			recentFileActions[j]->setVisible(true);
-		}
-		else
-		{
-			recentFileActions[j]->setVisible(false);
-		}
-	}
-	separatorAction->setVisible(!recentFiles.isEmpty());
+                .arg(strippedName(recentFiles[j]));
+            recentFileActions[j]->setText(text);
+            recentFileActions[j]->setData(recentFiles[j]);
+            recentFileActions[j]->setVisible(true);
+        }
+        else
+        {
+            recentFileActions[j]->setVisible(false);
+        }
+    }
+    separatorAction->setVisible(!recentFiles.isEmpty());
 }
 
 void MainWindow::openRecentFile()
 {
-	if(okToContinue())
-	{
+    if(okToContinue())
+    {
         QAction *action = qobject_cast<QAction *>(sender());
-		if(action)
-			loadFile(action->data().toString());
-	}
+        //transform QObject* to QAction*
+        if(action)
+            loadFile(action->data().toString());
+    }
 }
 
-void MainWindow::closeAllWindows()
+void MainWindow::closeAllWindow()
 {
-        QAction *action = qobject_cast<QAction *>(sender());
-		if(action)
-			close();
+    emit exitApplication();
 }
 
 void MainWindow::find()
@@ -565,13 +617,18 @@ void MainWindow::find()
 
 void MainWindow::goToCell()
 {
-    GotoCellDialog toCell(this);
-    if(toCell.exec())
-	{
-        QString str = toCell.lineEdit->text().toUpper();
-        sheet->setCurrentCell(str.mid(1).toInt()-1,
-			str[0].unicode()-'A');
-	}
+    GotoCellDialog *dialog = new GotoCellDialog(this);
+    if(dialog->exec())
+    {
+        int row = dialog->getRow();
+        int column = dialog->getColumn();
+        row = row < sheet->getRowCount() ?
+                    row : sheet->getRowCount();
+        column = column < sheet->getColumnCount() ?
+                    column : sheet->getColumnCount();
+        sheet->setCurrentCell(row,column);
+    }
+    delete dialog;
 }
 
 void MainWindow::sort()
@@ -651,11 +708,11 @@ void MainWindow::setTextColor()
         textColor = QColorDialog::getColor(Qt::black);
     if(textColor.isValid())
     {
-        sheet->setTextColor(textColor);
         textColorIcon = setIconColor(textColorIcon,textColor);
         textColorIconAction->setIcon(textColorIcon);
         formatToolBar->updateGeometry();
         setWindowModified(false);
+        sheet->setTextColor(textColor);
     }
 }
 
@@ -671,10 +728,10 @@ void MainWindow::setBackgroundColor()
         backgroundColor = QColorDialog::getColor(Qt::white);
     if(backgroundColor.isValid())
     {
-        sheet->setBackgroundColor(backgroundColor);
         backgroundColorIcon = setIconColor(backgroundColorIcon,backgroundColor);
         backgroundColorIconAction->setIcon(backgroundColorIcon);
         formatToolBar->updateGeometry();
+        sheet->setBackgroundColor(backgroundColor);
         setWindowModified(false);
     }
 }
@@ -683,7 +740,8 @@ void MainWindow::about()
 {
 	QMessageBox::about(this,tr("About EasyTable"),
         tr("<h1>EasyTable 0.2</h1>"
-		"<p>Copyleft &copy; BugMore Software Inc."));
+           "<br/>"
+        "<em>Copyleft &copy; BugMore Software Inc.</em>"));
 }
 
 void MainWindow::writeSettings()
@@ -692,7 +750,8 @@ void MainWindow::writeSettings()
 	settings.setValue("geometry",saveGeometry());
 	settings.setValue("recentFiles",recentFiles);
 	settings.setValue("showGrid",showGridAction->isChecked());
-	settings.setValue("autoRecalc",autoRecalcAction->isChecked());
+    settings.setValue("defaultAlignment",defaultAlignmentAction->isChecked());
+    settings.setValue("autoRecalc",autoRecalcAction->isChecked());
 }
 
 void MainWindow::readSettings()
@@ -700,9 +759,12 @@ void MainWindow::readSettings()
 	QSettings settings("BugMore Software Inc.","EasyTable");
 	restoreGeometry(settings.value("geometry").toByteArray());
     recentFiles = settings.value("recentFiles").toStringList();
-	updateRecentFileActions();
+    refreshRecentFileActions();
+    emit updateRecentFileActions();
     bool showGrid = settings.value("showGrid",true).toBool();
 	showGridAction->setChecked(showGrid);
+    bool defaultAlignment = settings.value("defaultAlignment",true).toBool();
+    defaultAlignmentAction->setChecked(defaultAlignment);
     bool autoRecalc = settings.value("autoRecalc",true).toBool();
-	autoRecalcAction->setChecked(autoRecalc);
+    autoRecalcAction->setChecked(autoRecalc);
 }

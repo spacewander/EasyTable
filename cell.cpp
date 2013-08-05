@@ -10,14 +10,17 @@ QTableWidgetItem* Cell::clone() const
 {
     return new Cell(*this);
 }
+
 void Cell::setFormula(const QString &formula)
 {
     setData(Qt::EditRole,formula);
 }
+
 QString Cell::formula() const
 {
     return data(Qt::EditRole).toString();
 }
+
 void Cell::setData(int role, const QVariant &value)
 {
     QTableWidgetItem::setData(role,value);
@@ -27,14 +30,17 @@ void Cell::setData(int role, const QVariant &value)
         defaultAlignment = true;
     }
 }
+
 void Cell::setDirty()
 {
     cacheIsDirty = true;
 }
+
 void Cell::setDefaultAlignment(bool ok)
 {
     defaultAlignment = ok;
 }
+
 QVariant Cell::data(int role) const
 {
     if(Qt::DisplayRole == role)
@@ -48,7 +54,7 @@ QVariant Cell::data(int role) const
             return "????";
         }
     }// end if
-    else if(Qt::TextAlignmentRole == role && defaultAlignment == true)
+    else if(Qt::TextAlignmentRole  == role && defaultAlignment == true)
     {
         if(QVariant::String == value().type())
         {
@@ -62,7 +68,9 @@ QVariant Cell::data(int role) const
     else
         return QTableWidgetItem::data(role);
 }
+
 const QVariant INVALID;
+
 QVariant Cell::value() const
 {
     if(cacheIsDirty)
@@ -96,6 +104,7 @@ QVariant Cell::value() const
     }//end if cacheIsDirty
     return cachedValue;
 }
+
 QVariant Cell::evalExpression(const QString &str, int &pos) const
 {
     QVariant result = evalTerm(str,pos);
@@ -121,6 +130,7 @@ QVariant Cell::evalExpression(const QString &str, int &pos) const
     }//end while
     return result;
 }
+
 QVariant Cell::evalTerm(const QString &str, int &pos) const
 {
     QVariant result = evalFactor(str,pos);
@@ -149,6 +159,7 @@ QVariant Cell::evalTerm(const QString &str, int &pos) const
     }//end while
     return result;
 }
+
 QVariant Cell::evalFactor(const QString &str, int &pos) const
 {
     QVariant result;

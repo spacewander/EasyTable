@@ -19,7 +19,8 @@ GotoCellDialog::GotoCellDialog(QWidget *parent) :
     label = new QLabel(tr("前往:"));
     lineEdit = new QLineEdit;
     label->setBuddy(lineEdit);
-    QRegExp regExp("[A-Za-z][1-9][0-9]{0,2}");
+    QRegExp regExp("[A-Za-z][1-9][0-9]{0,4}");
+    //The limit of column is 9999,I hope no one need more columns
     lineEdit->setValidator(new QRegExpValidator(regExp,this));
     connect(lineEdit,SIGNAL(textChanged(const QString &)),this,
                             SLOT(on_lineEdit_textChanged()));
@@ -27,10 +28,12 @@ GotoCellDialog::GotoCellDialog(QWidget *parent) :
     QHBoxLayout *highLayout = new QHBoxLayout;
     highLayout->addWidget(label);
     highLayout->addWidget(lineEdit);
+
     QHBoxLayout *lowLayout = new QHBoxLayout;
     lowLayout->addWidget(okButton);
     lowLayout->addWidget(cancelButton);
     lowLayout->addStretch(20);
+
     QVBoxLayout *mainLayout = new QVBoxLayout;
     mainLayout->addLayout(highLayout);
     mainLayout->addLayout(lowLayout);
@@ -43,4 +46,16 @@ GotoCellDialog::GotoCellDialog(QWidget *parent) :
 void GotoCellDialog::on_lineEdit_textChanged()
 {
     okButton->setEnabled(lineEdit->hasAcceptableInput());
+}
+
+int GotoCellDialog::getRow()
+{
+    QString str = lineEdit->text().toUpper();
+    return  str.mid(1).toInt()-1;
+}
+
+int GotoCellDialog::getColumn()
+{
+    QString str = lineEdit->text().toUpper();
+    return str[0].unicode() - 'A';
 }
