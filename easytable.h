@@ -42,6 +42,8 @@ public slots:
 
     void rowInsert();
     void columnInsert();
+    void rowRemove();
+    void columnRemove();
 
     void selectCurrentRow();
     void selectCurrentColumn();
@@ -55,6 +57,8 @@ public slots:
 
     void setDefaultAlignment(bool ok);
     QTextDocument* getContextForPrint();//get context for print
+
+    void useFunction();
 private slots:
     void somethingChanged();
 private:
@@ -66,14 +70,29 @@ private:
     QString formula(int row,int column) const;
     void setFormula(int row,int column,const QString &formula);
 
-    void columnSort(const EasyTableCompare &compare,const QTableWidgetSelectionRange &range);
-    void defaultSort(const EasyTableCompare &compare,const QTableWidgetSelectionRange &range);
+    void columnSort(const EasyTableCompare &compare,
+                    const QTableWidgetSelectionRange &range);
+    void defaultSort(const EasyTableCompare &compare,
+                     const QTableWidgetSelectionRange &range);
 
     void setHeaderItem();
 
     bool autoRecalc;
     bool defaultAlignment;
     QTextDocument* context;
+
+    enum Function{Cancell = 0,Count = 1,Sum = 2,Average = 3};
+    //set the function recognition code
+    Function functionCode;
+    int count;
+    double sum,average;
+    Function getFunctionCode();
+    void displayResults();
+
+    void functionCount();
+    void functionSum();
+    void functionAverage();
+    //the functions above change the value of count,sum,average...
 };
 
 class EasyTableCompare

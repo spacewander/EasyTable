@@ -1,4 +1,6 @@
-﻿#include "mainwidget.h"
+﻿//it only supplies one window existed in the same time
+//so, be careful! T_T
+#include "mainwidget.h"
 #include "mainwindow.h"
 
 #include <QAction>
@@ -19,7 +21,7 @@ MainWidget::MainWidget(QWidget *parent) :
     mdiArea = new QMdiArea(this);
     setCentralWidget(mdiArea);
     setView();
-    setCurrentWindow();
+    createNewMainWindow();//
 }
 
 void MainWidget::setCurrentWindow()
@@ -96,7 +98,7 @@ void MainWidget::connectSignalAndSlots(MainWindow *curWindow)
 void MainWidget::createNewMainWindow()
 {
     setCurrentWindow();
-    mainToolBar->hide();
+    hideToolBar();
 }
 
 void MainWidget::openNewMainWindow()
@@ -104,7 +106,7 @@ void MainWidget::openNewMainWindow()
     setCurrentWindow();
     if(curWindow != nullptr)
         curWindow->open();
-     mainToolBar->hide();
+     hideToolBar();
 }
 
 void MainWidget::closeAllWindow()
@@ -119,8 +121,8 @@ void MainWidget::closeAllWindow()
 
 void MainWidget::closeSubWindow()
 {
-    curSubWindow = mdiArea->currentSubWindow();
-    curSubWindow->close();
+    if(curSubWindow)
+        curSubWindow->close();
 }
 
 void MainWidget::updateRecentFileActions()
@@ -175,15 +177,15 @@ void MainWidget::openRecentFile()
 void MainWidget::mouseMoveEvent(QMouseEvent *event)
 {
     if(event->y() >= 100)
-        mainToolBar->hide();
+        hideToolBar();
     else
-        mainToolBar->show();
+        showToolBar();
 }
 
 void MainWidget::mousePressEvent(QMouseEvent *event)
 {
     if(event->y() <= 30 && event->button() == Qt::LeftButton)
-        mainToolBar->show();
+        showToolBar();
 }
 
 void MainWidget::showToolBar()

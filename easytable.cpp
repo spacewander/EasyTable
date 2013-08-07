@@ -4,6 +4,7 @@
 #include <QDataStream>
 #include <QFile>
 #include <QFont>
+#include <QInputDialog>
 
 #include <QMessageBox>
 #include <QStringList>
@@ -295,7 +296,7 @@ void EasyTable::del()
     if(!items.isEmpty())
     {
         foreach (QTableWidgetItem *item,items)
-            delete item;
+            item->setText("");
         somethingChanged();
     }
 }
@@ -314,6 +315,14 @@ void EasyTable::rowInsert()
 {
     insertRow(1);
     RowCount += 1;
+    int i = currentRow()+1;
+    for(int j = 0;j<ColumnCount;j++)
+    {
+        setFormula(i,j,"");
+        Cell *c = cell(i,j);
+        if(!c)
+            c->setDefaultAlignment(defaultAlignment);
+    }
 }
 
 void EasyTable::columnInsert()
@@ -328,6 +337,27 @@ void EasyTable::columnInsert()
     insertColumn(1);
     ColumnCount += 1;
     setHeaderItem();
+    int j = currentColumn()+1;
+    for(int i = 0;i<RowCount;i++)
+    {
+        setFormula(i,j,"");
+        Cell *c = cell(i,j);
+        if(!c)
+            c->setDefaultAlignment(defaultAlignment);
+    }
+}
+
+void EasyTable::rowRemove()
+{
+    removeRow(currentRow());
+    RowCount--;
+}
+
+void EasyTable::columnRemove()
+{
+    removeColumn(currentColumn());
+    ColumnCount--;
+    setHeaderItem();
 }
 
 void EasyTable::selectCurrentRow()
@@ -338,6 +368,136 @@ void EasyTable::selectCurrentRow()
 void EasyTable::selectCurrentColumn()
 {
     selectColumn(currentColumn());
+}
+
+void EasyTable::useFunction()
+{
+    functionCode = getFunctionCode();
+    switch(functionCode)
+    {
+    case Cancell :
+        return;
+    case Count :
+        functionCount();
+        break;
+    case Sum :
+        functionSum();
+        break;
+    case Average :
+        functionAverage();
+        break;
+    default:
+        break;
+    }
+    displayResults();
+}
+
+EasyTable::Function EasyTable::getFunctionCode()
+{
+    QStringList functionItemList;
+    functionItemList<<tr("计数")<<tr("求和")<<tr("平均");
+    bool ok;
+    QString functionItem = QInputDialog::getItem(this,tr("函数"),
+                                          tr("请选择函数: "),functionItemList,
+                                          0,false,&ok);
+    if(ok && !functionItem.isEmpty())
+    {
+        if(functionItem == tr("计数"))
+            return Count;
+        if(functionItem == tr("求和"))
+            return Sum;
+        if(functionItem == tr("平均"))
+            return Average;
+    }
+    return Cancell;
+}
+
+void EasyTable::functionCount()
+{
+    count = 0;
+    QTableWidgetSelectionRange range = selectedRange();
+    for(int i = 0;i<range.rowCount();i++)
+    {
+        for(int j = 0;j<range.columnCount();j++)
+        {
+            Cell *c = cell(range.topRow()+i,range.leftColumn()+j);
+            if(c != nullptr && !c->text().isEmpty())
+                ++count;
+        }//end for column
+    }//end for row
+}
+
+void EasyTable::functionSum()
+{
+    sum = 0;
+    bool ok;
+    double temp = 0.0;
+    QTableWidgetSelectionRange range = selectedRange();
+    for(int i = 0;i<range.rowCount();i++)
+    {
+        for(int j = 0;j<range.columnCount();j++)
+        {
+            Cell *c = cell(range.topRow()+i,range.leftColumn()+j);
+            if(c != nullptr)
+            {
+                temp = c->text().toDouble(&ok);
+                if(ok)
+                    sum += temp;
+            }
+        }//end for column
+    }//end for row
+}
+
+void EasyTable::functionAverage()
+{
+    sum = 0,count = 0;
+    bool ok;
+    double temp = 0.0;
+    QTableWidgetSelectionRange range = selectedRange();
+    for(int i = 0;i<range.rowCount();i++)
+    {
+        for(int j = 0;j<range.columnCount();j++)
+        {
+            Cell *c = cell(range.topRow()+i,range.leftColumn()+j);
+            if(c != nullptr)
+            {
+                temp = c->text().toDouble(&ok);
+                if(ok)
+                {
+                    sum += temp;
+                    ++count;
+                }
+            }
+        }//end for column
+    }//end for row
+    if(count != 0)
+        average = sum/count;
+    else
+        average = 0;
+}
+
+void EasyTable::displayResults()
+{
+    switch(functionCode)
+    {
+    case Count :
+        QMessageBox::about(this,tr("计数"),
+                           tr("<em>函数结果</em>"
+                           "<h1>计数 ： %1 \t</h1>").arg(count));
+        break;
+    case Sum :
+        QMessageBox::about(this,tr("求和"),
+                           tr("<em>函数结果</em>"
+                           "<h1>求和 ： %1 \t</h1>").arg(sum));
+        break;
+    case Average :
+        QMessageBox::about(this,tr("平均"),
+                           tr("<em>函数结果</em>"
+                           "<h1>平均 ： %1 \t</h1>").arg(average));
+        break;
+    default :
+        break;
+    }
 }
 
 void EasyTable::findInAll(const QString &str, Qt::CaseSensitivity cs)

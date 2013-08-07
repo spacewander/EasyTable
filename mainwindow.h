@@ -106,6 +106,8 @@ private:
     QMenu *alignmentSubMenu;
     QMenu *insertSubMenu;
     QMenu *chooseSubMenu;
+    QMenu *formatSubMenu;
+    QMenu *removeSubMenu;
 
 	QToolBar *fileToolBar;
 	QToolBar *editToolBar;
@@ -134,11 +136,14 @@ private:
 	QAction *selectRowAction;
 	QAction *selectColumnAction;
 	QAction *selectAllAction;
+    QAction *removeRowAction;
+    QAction *removeColumnAction;
 
 	QAction *findAction;
 	QAction *goToCellAction;
 	QAction *recalculateAction;
 	QAction *sortAction;
+    QAction *functionAction;
 
 	QAction *autoRecalcAction;
 	QAction *showGridAction;

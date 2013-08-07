@@ -80,7 +80,6 @@ void MainWindow::createActions()
     }
 
     closeAction = new QAction(tr("&关闭"),this);
-	closeAction->setShortcut(QKeySequence::Close);
 	closeAction->setStatusTip(tr("关闭"));
     connect(closeAction,SIGNAL(triggered()),this,SLOT(closeWindow()));
     exitAction = new QAction(tr("退出"),this);
@@ -113,9 +112,9 @@ void MainWindow::createActions()
 	pasteAction->setShortcut(QKeySequence::Paste);
 	pasteAction->setStatusTip(tr("粘贴"));
     connect(pasteAction,SIGNAL(triggered()),sheet,SLOT(paste()));
-    deleteAction = new QAction(tr("删除"),this);
-	deleteAction->setShortcut(QKeySequence::Delete);
-	deleteAction->setStatusTip(tr("删除"));
+    deleteAction = new QAction(tr("清除"),this);
+    deleteAction->setShortcut(QKeySequence::Delete);
+    deleteAction->setStatusTip(tr("清除"));
     connect(deleteAction,SIGNAL(triggered()),sheet,SLOT(del()));
 
     insertRowAction = new QAction(tr("插入行"),this);
@@ -124,6 +123,12 @@ void MainWindow::createActions()
     insertColumnAction = new QAction(tr("插入列"),this);
     insertColumnAction->setStatusTip(tr("插入列"));
     connect(insertColumnAction,SIGNAL(triggered()),sheet,SLOT(columnInsert()));
+    removeRowAction = new QAction(tr("删除行"),this);
+    removeRowAction->setStatusTip(tr("删除行"));
+    connect(removeRowAction,SIGNAL(triggered()),sheet,SLOT(rowRemove()));
+    removeColumnAction = new QAction(tr("删除列"),this);
+    removeColumnAction->setStatusTip(tr("删除列"));
+    connect(removeColumnAction,SIGNAL(triggered()),sheet,SLOT(columnRemove()));
 
     selectRowAction = new QAction(tr("选中行"),this);
     selectRowAction->setStatusTip(tr("选择行"));
@@ -173,6 +178,9 @@ void MainWindow::createActions()
 	goToCellAction->setStatusTip(tr("前往"));
     goToCellAction->setShortcut(tr("Ctrl+T"));
 	connect(goToCellAction,SIGNAL(triggered()),this,SLOT(goToCell()));
+    functionAction = new QAction(tr("函数"),this);
+    functionAction->setStatusTip(tr("应用函数"));
+    connect(functionAction,SIGNAL(triggered()),sheet,SLOT(useFunction()));
 
     recalculateAction = new QAction(tr("重新计算"),this);
     recalculateAction->setStatusTip(tr("重新计算表格中的公式"));
@@ -201,7 +209,6 @@ void MainWindow::createActions()
     aboutAction = new QAction(tr("&关于"),this);
     aboutAction->setStatusTip(tr("关于我们"));
 	connect(aboutAction,SIGNAL(triggered()),this,SLOT(about()));
-
 }
 
 void MainWindow::createMenus()
@@ -268,9 +275,16 @@ void MainWindow::createContextMenu()
     sheet->addAction(cutAction);
     sheet->addAction(copyAction);
     sheet->addAction(pasteAction);
-    sheet->addAction(fontAction);
-    sheet->addAction(textColorAction);
-    sheet->addAction(backgroundColorAction);
+    sheet->addAction(deleteAction);
+
+    removeSubMenu = new QMenu(tr("删除"));
+    removeSubMenu->addAction(removeRowAction);
+    removeSubMenu->addAction(removeColumnAction);
+
+    formatSubMenu = new QMenu(tr("单元格格式"));
+    formatSubMenu->addAction(fontAction);
+    formatSubMenu->addAction(textColorAction);
+    formatSubMenu->addAction(backgroundColorAction);
 
     insertSubMenu = new QMenu(tr("插入"));
     insertSubMenu->addAction(insertRowAction);
@@ -288,8 +302,11 @@ void MainWindow::createContextMenu()
     chooseSubMenu->addAction(selectColumnAction);
     chooseSubMenu->addAction(selectAllAction);
 
+    sheet->addAction(functionAction);
+    sheet->addAction(formatSubMenu->menuAction());
     sheet->addAction(alignmentSubMenu->menuAction());
     sheet->addAction(insertSubMenu->menuAction());
+    sheet->addAction(removeSubMenu->menuAction());
     sheet->addAction(chooseSubMenu->menuAction());
     sheet->setContextMenuPolicy(Qt::ActionsContextMenu);
 }
@@ -388,6 +405,8 @@ bool MainWindow::okToContinue()
 		{
             if(QMessageBox::Cancel == r)
 				return false;
+            else
+                setWindowModified(false);
 		}
 	}
 	return true;
@@ -698,7 +717,9 @@ QIcon& MainWindow::setIconColor(QIcon &icon,QColor color)
 
 void MainWindow::setTextColor()
 {
-    QColor curColor = sheet->currentItem()->textColor();
+    QColor curColor;
+    if(!sheet->currentItem())
+        curColor = sheet->currentItem()->textColor();
     QColor textColor;
     if(curColor.isValid())
         textColor = QColorDialog::getColor(curColor);
@@ -718,7 +739,9 @@ void MainWindow::setTextColor()
 
 void MainWindow::setBackgroundColor()
 {
-    QColor curColor = sheet->currentItem()->backgroundColor();
+    QColor curColor;
+    if(!sheet->currentItem())
+        curColor = sheet->currentItem()->backgroundColor();
     QColor backgroundColor;
     if(curColor.isValid())
         backgroundColor = QColorDialog::getColor(curColor);
@@ -739,7 +762,7 @@ void MainWindow::setBackgroundColor()
 void MainWindow::about()
 {
 	QMessageBox::about(this,tr("About EasyTable"),
-        tr("<h1>EasyTable 0.2</h1>"
+        tr("<h1>EasyTable 0.6</h1>"
            "<br/>"
         "<em>Copyleft &copy; BugMore Software Inc.</em>"));
 }

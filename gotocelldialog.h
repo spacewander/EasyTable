@@ -12,7 +12,6 @@ class GotoCellDialog : public QDialog
     Q_OBJECT
 public:
     explicit GotoCellDialog(QWidget *parent = 0);
-
     int getRow();
     int getColumn();
 signals:
