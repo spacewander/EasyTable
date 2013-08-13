@@ -16,6 +16,7 @@ public:
     explicit MainWidget(QWidget *parent = 0);
     void mouseMoveEvent(QMouseEvent *event);
     void mousePressEvent(QMouseEvent *event);
+    void closeEvent(QCloseEvent *event);
     void setView();
 signals:
     

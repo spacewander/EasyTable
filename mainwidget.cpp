@@ -21,7 +21,7 @@ MainWidget::MainWidget(QWidget *parent) :
     mdiArea = new QMdiArea(this);
     setCentralWidget(mdiArea);
     setView();
-    createNewMainWindow();//
+    setCurrentWindow();
 }
 
 void MainWidget::setCurrentWindow()
@@ -33,7 +33,7 @@ void MainWidget::setCurrentWindow()
     curSubWindow = mdiArea->addSubWindow(curWindow);
     connectSignalAndSlots(curWindow);
     curWindow->setFocus();
-    mdiArea->activatePreviousSubWindow();
+//    mdiArea->activatePreviousSubWindow();
 }
 
 void MainWidget::createActions()
@@ -109,6 +109,11 @@ void MainWidget::openNewMainWindow()
      hideToolBar();
 }
 
+void MainWidget::closeEvent(QCloseEvent *event)
+{
+    closeAllWindow();
+}
+
 void MainWidget::closeAllWindow()
 {
     QList<QMdiSubWindow*> widgetList = mdiArea->subWindowList();
@@ -123,6 +128,7 @@ void MainWidget::closeSubWindow()
 {
     if(curSubWindow)
         curSubWindow->close();
+    curSubWindow = mdiArea->currentSubWindow();
 }
 
 void MainWidget::updateRecentFileActions()

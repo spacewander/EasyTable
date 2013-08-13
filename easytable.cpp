@@ -1,4 +1,6 @@
 ﻿#include "easytable.h"
+#include "cell.h"
+//recommand to use <QtGui>
 #include <QApplication>
 #include <QClipboard>
 #include <QDataStream>
@@ -12,30 +14,45 @@
 #include <QTableWidget>
 #include <QTextDocument>
 
-#include "cell.h"
-
 EasyTable::EasyTable(QWidget *parent) :
     QTableWidget(parent)
 {
     autoRecalc = true;
     defaultAlignment = true;
+    autoResize = true;
     RowCount = 32;
     ColumnCount = 18;
     setItemPrototype(new Cell);
-    setSelectionMode(ContiguousSelection);
+    setSelectionMode(ExtendedSelection);
+    clear();
+    storeCellSize(0,0);//store the size of a normal cell;
+    //Connections should be done later than clear(),
+    //otherwise the size of Cell will be changed unexpectedly
+    connectSignalsAndSlots();
+}
+
+void EasyTable::connectSignalsAndSlots()
+{
     connect(this,SIGNAL(itemChanged(QTableWidgetItem*)),
             this,SLOT(somethingChanged()));
-    clear();
+    connect(this,SIGNAL(itemChanged(QTableWidgetItem*)),
+            this,SLOT(resizeCell(QTableWidgetItem*)));
 }
 
 void EasyTable::setHeaderItem()
 {
     for(int i = 0;i<ColumnCount;i++)
     {
-        QTableWidgetItem *item=new QTableWidgetItem;
+        QTableWidgetItem *item = new QTableWidgetItem;
         item->setText(QString(QChar('A'+i)));
         setHorizontalHeaderItem(i,item);
     }
+}
+
+void EasyTable::storeCellSize(int row,int column)
+{
+    Width = columnWidth(column);
+    Height = rowHeight(row);
 }
 
 void EasyTable::clear()
@@ -235,6 +252,31 @@ QTableWidgetSelectionRange EasyTable::selectedRange()const
     return ranges.first();
 }
 
+void EasyTable::resizeCell(QTableWidgetItem *item)
+{
+    int column = item->column();
+    int row = item->row();
+    QFont font = item->font();
+    qreal fontPointSizeF = font.pointSizeF();
+    int fontPixelSize = font.pixelSize();
+    qreal width = 0;
+    qreal height = 0;
+    double widthFactor = 1;
+    double heightFactor = 1.5;
+    if(fontPointSizeF >= 0)
+    {
+         width = item->text().size()*fontPointSizeF*widthFactor;
+         height = fontPointSizeF*heightFactor;
+    }
+    else
+    if(fontPixelSize >= 0)
+    {
+        width = item->text().size()*fontPixelSize*widthFactor;
+        height = fontPixelSize*heightFactor;
+    }
+    cellSizeChange(row,column,width,height);
+}
+
 void EasyTable::cut()
 {
     copy();
@@ -358,6 +400,33 @@ void EasyTable::columnRemove()
     removeColumn(currentColumn());
     ColumnCount--;
     setHeaderItem();
+}
+
+void EasyTable::rowHide()
+{
+    QTableWidgetSelectionRange range = selectedRange();
+    int rows = range.rowCount();
+    int firstRow = range.topRow();
+    for(int i = 0;i<rows;i++)
+        hideRow(i+firstRow);
+}
+
+void EasyTable::columnHide()
+{
+    QTableWidgetSelectionRange range = selectedRange();
+    int columns = range.columnCount();
+    int firstColumn = range.leftColumn();
+    for(int i = 0;i<columns;i++)
+        hideColumn(i+firstColumn);
+}
+
+void EasyTable::showHiddenRanges()
+{
+    for(int i = 0;i<RowCount;i++)
+    {
+        if(isRowHidden(i))
+            showRow(i);
+    }
 }
 
 void EasyTable::selectCurrentRow()
@@ -589,9 +658,12 @@ void EasyTable::setAutoRecalculate(bool recalc)
         recalculate();
 }
 
-bool EasyTable::getDefaultAlignment()
+void EasyTable::setAutoResize(bool resize)
 {
-    return defaultAlignment;
+    autoResize = resize;
+    if(!autoResize)
+        disconnect(this,SIGNAL(itemChanged(QTableWidgetItem*)),
+                   this,SLOT(resizeCell(QTableWidgetItem*)));
 }
 
 void EasyTable::setDefaultAlignment(bool ok)
@@ -790,4 +862,47 @@ void EasyTable::setBackgroundColor(QColor &backgroundColor)
                 c->setBackgroundColor(backgroundColor);
         }//end for column
     }//end for row
+}
+
+void EasyTable::setGrid(Qt::PenStyle &gridStyle)
+{
+    setGridStyle(gridStyle);
+}
+
+void EasyTable::cellSizeChange(int row, int column,qreal width,qreal height)
+{
+     if(width > Width)
+        setColumnWidth(column,int(width)+1);
+    else
+    {
+        if(columnWidth(column) > Width)
+        {
+            int max = Width;
+            for(int i = 0;i<RowCount;i++)
+            {
+                if(columnWidth(i)>Width && columnWidth(i)>max)
+                {
+                    max = columnWidth(i);
+                }//end if
+            }//end for
+            setColumnWidth(column,max);
+        }//end if
+    }//end else
+    if(height > Height)
+        setRowHeight(row,int(height)+1);
+    else
+    {
+        if(rowHeight(row) > Height)
+        {
+            int max = Height;
+            for(int i = 0;i<ColumnCount;i++)
+            {
+                if(rowHeight(i)>Height && rowHeight(i)>max)
+                {
+                    max = rowHeight(i);
+                }//end if
+            }//end for
+            setRowHeight(row,max);
+        }//end if
+    }//end else
 }

@@ -86,6 +86,7 @@ void FindDialog::findClicked()
     {
         emit findInAll(text,cs);
     }
+    setWindowOpacity(0.5);
 }
 
 void FindDialog::enableFindButton(const QString &text)

@@ -20,7 +20,8 @@ GotoCellDialog::GotoCellDialog(QWidget *parent) :
     lineEdit = new QLineEdit;
     label->setBuddy(lineEdit);
     QRegExp regExp("[A-Za-z][1-9][0-9]{0,4}");
-    //The limit of column is 9999,I hope no one need more columns
+    //The limit of columns is 9999,I hope no one needs more columns
+    //And the limit of rows is 26
     lineEdit->setValidator(new QRegExpValidator(regExp,this));
     connect(lineEdit,SIGNAL(textChanged(const QString &)),this,
                             SLOT(on_lineEdit_textChanged()));
@@ -41,6 +42,7 @@ GotoCellDialog::GotoCellDialog(QWidget *parent) :
 
     setWindowTitle(tr("前往"));
     setFixedHeight(sizeHint().height());
+    setWindowOpacity(1.0);
 }
 
 void GotoCellDialog::on_lineEdit_textChanged()

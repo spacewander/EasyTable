@@ -26,15 +26,19 @@ public:
     void setAlignment(int alignment);
     void setTextColor(QColor &textColor);
     void setBackgroundColor(QColor &backgroundColor);
+    void setGrid(Qt::PenStyle &gridStyle);
 
-    bool getDefaultAlignment();
+    bool getDefaultAlignment()const{return defaultAlignment;}
     bool autoRecalculate() const{return autoRecalc;}
+    bool getAutoResize() const{return autoResize;}
 
     int getRowCount();
     int getColumnCount();
 signals:
     void modified();
+
 public slots:
+    void connectSignalsAndSlots();
     void cut();
     void copy();
     void paste();
@@ -44,12 +48,17 @@ public slots:
     void columnInsert();
     void rowRemove();
     void columnRemove();
+    void rowHide();
+    void columnHide();
+    void showHiddenRanges();
 
     void selectCurrentRow();
     void selectCurrentColumn();
 
     void recalculate();
+    void resizeCell(QTableWidgetItem *item);
     void setAutoRecalculate(bool recalc);
+    void setAutoResize(bool resize);
 
     void findNext(const QString &str,Qt::CaseSensitivity cs);
     void findPrevious(const QString &str,Qt::CaseSensitivity cs);
@@ -80,6 +89,11 @@ private:
     bool autoRecalc;
     bool defaultAlignment;
     QTextDocument* context;
+
+    bool autoResize;
+    void storeCellSize(int row, int column);
+    int Width,Height;
+    void cellSizeChange(int row, int column, qreal width, qreal height);
 
     enum Function{Cancell = 0,Count = 1,Sum = 2,Average = 3};
     //set the function recognition code
