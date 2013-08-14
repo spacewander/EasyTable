@@ -19,7 +19,8 @@ SOURCES += main.cpp\
     cell.cpp \
     easytable.cpp \
     sortdialog.cpp \
-    mainwidget.cpp
+    mainwidget.cpp \
+    easytablecompare.cpp
 
 HEADERS  += mainwindow.h \
     finddialog.h \
@@ -27,7 +28,8 @@ HEADERS  += mainwindow.h \
     cell.h \
     easytable.h \
     sortdialog.h \
-    mainwidget.h
+    mainwidget.h \
+    easytablecompare.h
 
 FORMS += \
     sortdialog.ui

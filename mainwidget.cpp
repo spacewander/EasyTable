@@ -22,6 +22,7 @@ MainWidget::MainWidget(QWidget *parent) :
     setCentralWidget(mdiArea);
     setView();
     setCurrentWindow();
+    ifCloseCancell = false;
 }
 
 void MainWidget::setCurrentWindow()
@@ -93,6 +94,7 @@ void MainWidget::connectSignalAndSlots(MainWindow *curWindow)
     connect(curWindow,SIGNAL(closeSubWindow()),this,SLOT(closeSubWindow()));
     connect(curWindow,SIGNAL(showToolBar()),this,SLOT(showToolBar()));
     connect(curWindow,SIGNAL(hideToolBar()),this,SLOT(hideToolBar()));
+    connect(curWindow,SIGNAL(closeCancelled()),this,SLOT(setCloseCancelled()));
 }
 
 void MainWidget::createNewMainWindow()
@@ -112,6 +114,14 @@ void MainWidget::openNewMainWindow()
 void MainWidget::closeEvent(QCloseEvent *event)
 {
     closeAllWindow();
+    if(ifCloseCancell == false)
+        event->accept();
+    else if((mdiArea->subWindowList()).count() != 0)
+        //if there is window existed
+    {
+        event->ignore();
+        ifCloseCancell = true;
+    }
 }
 
 void MainWidget::closeAllWindow()
@@ -120,6 +130,8 @@ void MainWidget::closeAllWindow()
     for(auto i = widgetList.begin();i != widgetList.end();i++)
     {
         (*i)->close();
+        if(ifCloseCancell == true)
+            break;
     }
     close();
 }
@@ -223,6 +235,11 @@ void MainWidget::initialRecentFilesActions()
             recentFileActions[i]->setVisible(false);
         }//end if
     }//end for
+}
+
+void MainWidget::setCloseCancelled()
+{
+    ifCloseCancell = true;
 }
 
 void MainWidget::setView()

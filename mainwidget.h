@@ -30,6 +30,7 @@ public slots:
     void openNewMainWindow();
     void closeAllWindow();
     void closeSubWindow();
+    void setCloseCancelled();
 
     void showToolBar();
     void hideToolBar();
@@ -56,6 +57,7 @@ private:
     enum{MaxRecentFiles = 5};
     QAction *recentFileActions[MaxRecentFiles];
 
+    bool ifCloseCancell;
 };
 
 #endif // MAINWIDGET_H

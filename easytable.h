@@ -2,6 +2,7 @@
 #define EasyTable_H
 
 #include <QTableWidget>
+#include "easytablecompare.h"
 
 class Cell;
 class EasyTableCompare;
@@ -19,6 +20,10 @@ public:
     void clear();
     bool readFile(const QString &fileName);
     bool writeFile(const QString &fileName);
+    bool saveFileAsTxt(const QString &fileName);
+    bool saveFileAsEt(const QString &fileName);
+    bool saveFileAsCsv(const QString &fileName);
+
 
     void sort(const EasyTableCompare &compare);
 
@@ -108,16 +113,4 @@ private:
     void functionAverage();
     //the functions above change the value of count,sum,average...
 };
-
-class EasyTableCompare
-{
-public:
-    bool operator()(const QStringList &row1,const QStringList
-                &row2) const;
-
-    enum{KeyCount = 3};
-    int keys[KeyCount];
-    bool ascending[KeyCount];
-};
-
 #endif // EasyTable_H

@@ -27,10 +27,11 @@ signals:
     void updateRecentFiles(QString &fileName);
     void exitApplication();
     void closeSubWindow();
+    void closeCancelled();
     void showToolBar();
     void hideToolBar();
 
-private slots:
+    private slots:
     void newFile();
     void open();
     bool save();
@@ -78,7 +79,6 @@ private:
     bool okToContinue();
     bool loadFile(const QString &fileName);
     bool saveFile(const QString &fileName);
-    bool saveAsFile(const QString &fileName);
     void setCurrentFile(const QString &fileName);
     void refreshRecentFileActions();
     QString strippedName(const QString &fullFileName);

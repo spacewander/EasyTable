@@ -1,4 +1,5 @@
 ﻿#include "easytable.h"
+#include "easytablecompare.h"
 #include "cell.h"
 //recommand to use <QtGui>
 #include <QApplication>
@@ -13,6 +14,7 @@
 #include <QtAlgorithms>
 #include <QTableWidget>
 #include <QTextDocument>
+#include <QTextStream>
 
 EasyTable::EasyTable(QWidget *parent) :
     QTableWidget(parent)
@@ -20,8 +22,8 @@ EasyTable::EasyTable(QWidget *parent) :
     autoRecalc = true;
     defaultAlignment = true;
     autoResize = true;
-    RowCount = 32;
-    ColumnCount = 18;
+    RowCount = 32;      //set the number of rows
+    ColumnCount = 18;   //set the number of columns
     setItemPrototype(new Cell);
     setSelectionMode(ExtendedSelection);
     clear();
@@ -154,6 +156,116 @@ void EasyTable::somethingChanged()
 
 bool EasyTable::writeFile(const QString &fileName)
 {
+    QStringList fileInfo = fileName.split('.');
+    if(fileInfo.count() != 2)
+    {
+        QMessageBox::warning(this,tr("EasyTable"),
+                             tr("文件 %1 的类型无法识别\n")
+                             .arg(fileName));
+        return false;
+    }
+    int end = fileInfo.count() - 1;
+    if(fileInfo.at(end) == "txt")
+    {
+        if(saveFileAsTxt(fileName))
+            return true;
+        else
+        {
+            QMessageBox::warning(this,tr("EasyTable"),
+                                 tr("不能保存文本文件 %1\n")
+                                 .arg(fileName));
+            return false;
+        }
+    }
+    else if(fileInfo.at(end) == "et")
+    {
+        if(saveFileAsEt(fileName))
+            return true;
+        else
+        {
+            QMessageBox::warning(this,tr("EasyTable"),
+                                 tr("不能保存EasyTable文件 %1\n")
+                                 .arg(fileName));
+            return false;
+        }//end else
+    }//end if
+    else if(fileInfo.at(end) == "csv")
+    {
+        if(saveFileAsCsv(fileName))
+            return true;
+        else
+        {
+            QMessageBox::warning(this,tr("EasyTable"),
+                                 tr("不能保存EasyTable文件 %1\n")
+                                 .arg(fileName));
+            return false;
+        }//end else
+    }//end if
+    QMessageBox::warning(this,tr("EasyTable"),
+                         tr("文件 %1 的类型无法识别\n")
+                         .arg(fileName));
+    return false;
+}
+
+bool EasyTable::saveFileAsTxt(const QString &fileName)//not completed
+{
+    QFile file(fileName);
+    if(!file.open(QIODevice::WriteOnly))
+    {
+        QMessageBox::warning(this,tr("EasyTable"),
+                             tr("不能写入文件 %1:\n%2.")
+                             .arg(file.fileName())
+                             .arg(file.errorString()));
+        return false;
+    }
+    QTextStream out(&file);
+    QString text;
+    int r = QMessageBox::warning(this,tr("EasyTable"),
+                         tr("是否在文本文件中用分割符来替换空单元格？"),
+                         QMessageBox::Yes|QMessageBox::No);
+    QApplication::setOverrideCursor(Qt::WaitCursor);
+    if(r == QMessageBox::Yes)
+    {
+        for(int row = 0;row<RowCount;row++)
+        {
+            for(int column = 0;column<ColumnCount;column++)
+            {
+                QString str = formula(row,column);
+                if(str.isEmpty())
+                    text += '\t';
+                text += (str + '\t');
+            }
+            text += '\n';
+        }
+    }
+    else
+    {
+        for(int row = 0;row<RowCount;row++)
+        {
+            for(int column = 0;column<ColumnCount;column++)
+            {
+                QString str = formula(row,column);
+                text += (str + '\t');
+            }
+            text += '\n';
+        }
+    }
+    for(int i = text.size();i > 0 ;i--)
+    {
+        if(text[i-1] != '\t' && text[i-1] != '\n')
+        {
+            text.truncate(i);
+            break;
+        }
+    }
+    QMessageBox::warning(this,"e",text);
+    out<<text;
+    QApplication::restoreOverrideCursor();
+    return true;
+}
+
+bool EasyTable::saveFileAsEt(const QString &fileName)
+{
     QFile file(fileName);
     if(!file.open(QIODevice::WriteOnly))
     {
@@ -179,6 +291,42 @@ bool EasyTable::writeFile(const QString &fileName)
                 out<<quint16(row)<<quint16(column)<<str;
         }
     }
+    QApplication::restoreOverrideCursor();
+    return true;
+}
+
+bool EasyTable::saveFileAsCsv(const QString &fileName)//not completed
+{
+    QFile file(fileName);
+    if(!file.open(QIODevice::WriteOnly))
+    {
+        QMessageBox::warning(this,tr("EasyTable"),
+                             tr("不能写入文件 %1:\n%2.")
+                             .arg(file.fileName())
+                             .arg(file.errorString()));
+        return false;
+    }
+    QTextStream out(&file);
+    QString text;
+    QApplication::setOverrideCursor(Qt::WaitCursor);
+    for(int row = 0;row<RowCount;row++)
+    {
+        for(int column = 0;column<ColumnCount;column++)
+        {
+                QString str = formula(row,column);
+                text += (str + ',');
+         }
+    }
+    for(int i = text.size();i > 0 ;i--)
+    {
+        if(text[i-1] != ',')
+        {
+            text.truncate(i);
+            break;
+        }
+    }
+    QMessageBox::warning(this,"e",text);
+    out<<text;
     QApplication::restoreOverrideCursor();
     return true;
 }
@@ -318,14 +466,15 @@ void EasyTable::paste()
                                    "的区域大小不合适"));
         return;
     }
-    for(int i = 0;i<numRows;i++)
+    for(int i = 0;i < numRows;i++)//out of index!why?
     {
         QStringList columns = rows[i].split('\t');
-        for(int j = 0;j<numColumns;j++)
+        numColumns = columns.count();
+        for(int j = 0;j < numColumns;j++)
         {
             int row = range.topRow()+i;
             int column = range.leftColumn()+j;
-            if(row<RowCount && column<ColumnCount)
+            if(row < RowCount && column < ColumnCount)
                 setFormula(row,column,columns[j]);
         }//end for column
     }//end for row
@@ -355,9 +504,10 @@ int EasyTable::getColumnCount()
 
 void EasyTable::rowInsert()
 {
-    insertRow(1);
+    insertRow(currentRow());
+    //currenRow is the column we choose
     RowCount += 1;
-    int i = currentRow()+1;
+    int i = currentRow() - 1;
     for(int j = 0;j<ColumnCount;j++)
     {
         setFormula(i,j,"");
@@ -376,10 +526,11 @@ void EasyTable::columnInsert()
                                  "因为预定的列数已用完"));
       return;
     }
-    insertColumn(1);
+    insertColumn(currentColumn());
+    //currentColumn is the column we choose
     ColumnCount += 1;
     setHeaderItem();
-    int j = currentColumn()+1;
+    int j = currentColumn() - 1;
     for(int i = 0;i<RowCount;i++)
     {
         setFormula(i,j,"");
@@ -699,8 +850,8 @@ void EasyTable::setDefaultAlignment(bool ok)
 
 void EasyTable::sort(const EasyTableCompare &compare)
 {
-
-    QTableWidgetSelectionRange range = selectedRange();
+//    QTableWidgetSelectionRange range = selectedRange();
+    QTableWidgetSelectionRange range;
     int choice = QMessageBox::question(this,tr("排序"),
                                        tr("发现您只选取了一部分区域。\n"
                                            "我们将自动扩展排序的范围。\n"
@@ -711,11 +862,13 @@ void EasyTable::sort(const EasyTableCompare &compare)
     case QMessageBox::Yes:
         QApplication::setOverrideCursor(Qt::WaitCursor);
         selectAll();
+        range = selectedRange();
         columnSort(compare,range);
         QApplication::restoreOverrideCursor();
         somethingChanged();
         break;
     case QMessageBox::No:
+        range = selectedRange();
         defaultSort(compare,range);
         somethingChanged();
         break;
@@ -728,6 +881,7 @@ void EasyTable::sort(const EasyTableCompare &compare)
 }
 
 void EasyTable::columnSort(const EasyTableCompare &compare, const QTableWidgetSelectionRange &range)
+//the range is the whole sheet
 {
     QList<QStringList> rows;
     int i;
@@ -770,39 +924,6 @@ void EasyTable::defaultSort(const EasyTableCompare &compare, const QTableWidgetS
     }
 }
 
-bool EasyTableCompare::operator ()(const QStringList& row1,
-                                     const QStringList& row2) const
-{
-    for(int i=0;i<KeyCount;i++)
-    {
-        int column=keys[i];
-        if(column != -1)
-        {
-            if(row1[column] != row2[column])
-            {
-                if(row1[column] != "" && row2[column] != "")
-                {
-                    if(ascending[i])
-                    {
-                        return row1[column]<row2[column];
-                    }
-                    else
-                    {
-                        return row1[column]>row2[column];
-                    }
-                }//end if(row1[column] != row2[column])
-                else
-                {
-                    if(row1[column] == "")
-                        return row1[column]>row2[column];
-                    else
-                        return row1[column]<row2[column];
-                }//end else
-            }//end if row1[column]  !=  row2[column]
-        }//end if column  !=  -1
-    }//end for
-    return false;
-}
 
 void EasyTable::setFont(const QFont &font)
 {
@@ -875,6 +996,8 @@ void EasyTable::cellSizeChange(int row, int column,qreal width,qreal height)
         setColumnWidth(column,int(width)+1);
     else
     {
+        if(width == 0)
+             setColumnWidth(column,Width);
         if(columnWidth(column) > Width)
         {
             int max = Width;
