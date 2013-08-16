@@ -492,16 +492,6 @@ void EasyTable::del()
     }
 }
 
-int EasyTable::getRowCount()
-{
-    return RowCount;
-}
-
-int EasyTable::getColumnCount()
-{
-    return ColumnCount;
-}
-
 void EasyTable::rowInsert()
 {
     insertRow(currentRow());
@@ -848,34 +838,23 @@ void EasyTable::setDefaultAlignment(bool ok)
     QApplication::restoreOverrideCursor();
 }
 
-void EasyTable::sort(const EasyTableCompare &compare)
+void EasyTable::sort(const EasyTableCompare &compare, bool defaultChoose)
 {
-//    QTableWidgetSelectionRange range = selectedRange();
     QTableWidgetSelectionRange range;
-    int choice = QMessageBox::question(this,tr("排序"),
-                                       tr("发现您只选取了一部分区域。\n"
-                                           "我们将自动扩展排序的范围。\n"
-        "是否同意?"),
-        QMessageBox::Yes|QMessageBox::No|QMessageBox::Cancel);
-    switch(choice)
+    if(defaultChoose)
     {
-    case QMessageBox::Yes:
         QApplication::setOverrideCursor(Qt::WaitCursor);
         selectAll();
         range = selectedRange();
         columnSort(compare,range);
         QApplication::restoreOverrideCursor();
         somethingChanged();
-        break;
-    case QMessageBox::No:
+    }
+    else
+    {
         range = selectedRange();
         defaultSort(compare,range);
         somethingChanged();
-        break;
-    case QMessageBox::Cancel:
-        break;
-    default:
-        break;
     }
     clearSelection();
 }
@@ -1028,4 +1007,35 @@ void EasyTable::cellSizeChange(int row, int column,qreal width,qreal height)
             setRowHeight(row,max);
         }//end if
     }//end else
+}
+
+void EasyTable::getColumnContext(int column, QSet<QString> &strSet, QVector<int> &maxRow)
+{
+    int row = 0;
+    for(int i = 0; i < RowCount; i++)
+    {
+        Cell *c = cell(i,column);
+        if(c != nullptr && !(c->text().isEmpty()))
+        {
+            strSet.insert(c->text());
+            row = i;
+        }//end if
+    }//end for
+    maxRow.append(row);
+}
+
+void EasyTable::hideRowUnlike(int column, QString str, int range)
+//hide the unlike rows.range is the max unempty row in the whole sheet
+{
+    QString info;
+    for(int i = 0; i <= range; i++)
+    {
+        Cell *c = cell(i,column);
+        if(c != nullptr)
+        {
+            info = c->text();
+            if(info != str)
+                hideRow(i);
+        }//end if
+    }//end for
 }

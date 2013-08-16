@@ -25,7 +25,7 @@ public:
     bool saveFileAsCsv(const QString &fileName);
 
 
-    void sort(const EasyTableCompare &compare);
+    void sort(const EasyTableCompare &compare,bool defaultChoose);
 
     void setFont(const QFont &font);
     void setAlignment(int alignment);
@@ -37,8 +37,9 @@ public:
     bool autoRecalculate() const{return autoRecalc;}
     bool getAutoResize() const{return autoResize;}
 
-    int getRowCount();
-    int getColumnCount();
+    int getRowCount()const{return RowCount;}
+    int getColumnCount()const{return ColumnCount;}
+    void getColumnContext(int column,QSet<QString> &strSet,QVector<int> &maxRow);
 signals:
     void modified();
 
@@ -56,6 +57,7 @@ public slots:
     void rowHide();
     void columnHide();
     void showHiddenRanges();
+    void hideRowUnlike(int column,QString str,int range);
 
     void selectCurrentRow();
     void selectCurrentColumn();

@@ -12,16 +12,17 @@ class GotoCellDialog;
 
 class MainWindow : public QMainWindow
 {
-       Q_OBJECT
+    Q_OBJECT
 
 public:
     MainWindow(QWidget *parent = 0);
     friend class MainWidget;
-    //I have to state MainWidget as the friend class of MainWindow,
+    //I have to declare MainWidget as the friend class of MainWindow,
     //so that MainWidget is able to call the private methods of MainWindow
 protected:
     void closeEvent(QCloseEvent* event);
     void mousePressEvent(QMouseEvent *event);
+
 signals:
     void updateRecentFileActions();
     void updateRecentFiles(QString &fileName);
@@ -31,7 +32,7 @@ signals:
     void showToolBar();
     void hideToolBar();
 
-    private slots:
+private slots:
     void newFile();
     void open();
     bool save();
@@ -42,6 +43,8 @@ signals:
 
     void updateStatusBar();
     void sheetModified();
+    void setAutoSave(bool ok);
+    void saveAfterTimeInterval();
 
     void print();
     void find();
@@ -65,8 +68,19 @@ signals:
     void hideGrid();
     void showGrid();
 
+    void createGroupByToolBar();
+    void hideSpecificRow();
+    void cancellGroupBy();
 private:
     void createActions();
+    void createRecentFileActions();
+    void createFileActions();
+    void createEditActions();
+    void createOptionActions();
+    void createToolActions();
+    void createFormulaActions();
+    void createOtherActions();
+
     void createSubMenus();
     void createMenus();
     void createContextMenu();
@@ -86,6 +100,10 @@ private:
     EasyTable *sheet;
     FindDialog *findDialog;
     GotoCellDialog *toCell;
+    QVector<int> maxRow;
+
+    QTimer *timer;
+    bool autoSave;
 
     QLabel *locationLabel;
     QLabel *formulaLabel;
@@ -122,6 +140,7 @@ private:
     QToolBar *formatToolBar;
     QToolBar *alignmentToolBar;
     QToolBar *gridStyleToolBar;
+    QToolBar *groupByToolBar;
 
     QAction *newAction;
     QAction *openAction;
@@ -155,12 +174,15 @@ private:
     QAction *goToCellAction;
     QAction *recalculateAction;
     QAction *sortAction;
+    QAction *groupByAction;
+    QAction *hideGroupByAction;
     QAction *functionAction;
 
     QAction *autoRecalcAction;
     QAction *showGridAction;
     QAction *defaultAlignmentAction;
     QAction *autoResizeAction;
+    QAction *autoSaveAction;
 
     QAction *aboutAction;
 

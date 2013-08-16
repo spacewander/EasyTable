@@ -22,6 +22,7 @@
 #include <QSettings>
 #include <QStatusBar>
 #include <QTableWidgetSelectionRange>
+#include <QTimer>
 #include <QTextDocument>
 #include <QToolBar>
 #include <QWidget>
@@ -38,6 +39,8 @@ MainWindow::MainWindow(QWidget *parent)
     setAttribute(Qt::WA_DeleteOnClose);
     sheet = new EasyTable;
     setCentralWidget(sheet);
+    timer = nullptr;//initialize the timer
+    setAutoSave(false);
     createActions();
     createMenus();
     createContextMenu();
@@ -49,6 +52,18 @@ MainWindow::MainWindow(QWidget *parent)
 }
 
 void MainWindow::createActions()
+{
+    createFileActions();
+    createRecentFileActions();
+    createEditActions();
+    createFormulaActions();
+    createToolActions();
+    createOptionActions();
+    createOtherActions();
+}
+
+void MainWindow::createFileActions()
+//new,open,save,saveAs,print,close,exit,minimize,maximize,normalize
 {
     newAction = new QAction(tr("&新建"),this);
     newAction->setShortcut(QKeySequence::New);
@@ -71,14 +86,6 @@ void MainWindow::createActions()
     printAction->setStatusTip(tr("打印"));
     connect(printAction,SIGNAL(triggered()),this,SLOT(print()));
 
-    for(int i = 0;i<MaxRecentFiles;i++)
-    {
-        recentFileActions[i] = new QAction(this);
-        recentFileActions[i]->setVisible(false);
-        connect(recentFileActions[i],SIGNAL(triggered()),
-            this,SLOT(openRecentFile()));
-    }
-
     closeAction = new QAction(tr("&关闭"),this);
     closeAction->setStatusTip(tr("关闭"));
     connect(closeAction,SIGNAL(triggered()),this,SLOT(closeWindow()));
@@ -98,8 +105,11 @@ void MainWindow::createActions()
     normalizeAction = new QAction(tr("向下还原"),this);
     normalizeAction->setStatusTip(tr("还原"));
     connect(normalizeAction,SIGNAL(triggered()),this,SLOT(showNormal()));
+}
 
-
+void MainWindow::createEditActions()
+//cut,copy,paste,delete,insert,remove,hide,select
+{
     cutAction = new QAction(tr("剪切"),this);
     cutAction->setShortcut(QKeySequence::Cut);
     cutAction->setStatusTip(tr("剪切"));
@@ -149,7 +159,75 @@ void MainWindow::createActions()
     selectAllAction->setShortcut(QKeySequence::SelectAll);
     selectAllAction->setStatusTip(tr("选择所有单元格"));
     connect(selectAllAction,SIGNAL(triggered()),sheet,SLOT(selectAll()));
+}
 
+void MainWindow::createOptionActions()
+//showGrid,defaultAlignment,autoResize,autoSave
+{
+    showGridAction = new QAction(tr("&显示边线"),this);
+    showGridAction->setCheckable(true);
+    showGridAction->setChecked(sheet->showGrid());
+    showGridAction->setStatusTip(tr("显示或隐藏单元格的边线"));
+    connect(showGridAction,SIGNAL(toggled(bool)),
+        sheet,SLOT(setShowGrid(bool)));
+    defaultAlignmentAction = new QAction(tr("&使用默认对齐"),this);
+    defaultAlignmentAction->setCheckable(true);
+    defaultAlignmentAction->setChecked(sheet->getDefaultAlignment());
+    defaultAlignmentAction->setStatusTip(tr("默认对齐"));
+    connect(defaultAlignmentAction,SIGNAL(toggled(bool)),
+        sheet,SLOT(setDefaultAlignment(bool)));
+
+    autoResizeAction = new QAction(tr("&使用自动调整"),this);
+    autoResizeAction->setCheckable(true);
+    autoResizeAction->setChecked(sheet->getAutoResize());
+    autoResizeAction->setStatusTip(tr("自动调整"));
+    connect(autoResizeAction,SIGNAL(toggled(bool)),
+        sheet,SLOT(setAutoResize(bool)));
+    autoSaveAction = new QAction(tr("&使用定时保存"),this);
+    autoSaveAction->setCheckable(true);
+    autoSaveAction->setChecked(autoSave);
+    autoSaveAction->setStatusTip(tr("定时保存"));
+    connect(autoSaveAction,SIGNAL(toggled(bool)),
+        this,SLOT(setAutoSave(bool)));
+}
+
+void MainWindow::createToolActions()
+//find,goToCell,function,recalculate,sort,groupBy
+{
+    findAction = new QAction(tr("查找"),this);
+    findAction->setStatusTip(tr("查找"));
+    findAction->setShortcut(QKeySequence::Find);
+    connect(findAction,SIGNAL(triggered()),this,SLOT(find()));
+    goToCellAction = new QAction(tr("前往"),this);
+    goToCellAction->setStatusTip(tr("前往"));
+    goToCellAction->setShortcut(tr("Ctrl+T"));
+    connect(goToCellAction,SIGNAL(triggered()),this,SLOT(goToCell()));
+    functionAction = new QAction(tr("函数"),this);
+    functionAction->setStatusTip(tr("应用函数"));
+    connect(functionAction,SIGNAL(triggered()),sheet,SLOT(useFunction()));
+
+    recalculateAction = new QAction(tr("重新计算"),this);
+    recalculateAction->setStatusTip(tr("重新计算表格中的公式"));
+    connect(recalculateAction,SIGNAL(triggered()),sheet,SLOT(recalculate()));
+    autoRecalcAction  =  new QAction(tr("自动重新计算"),this);
+    autoRecalcAction->setStatusTip(tr("设置是否自动重新计算表格中的公式"));
+    connect(autoRecalcAction,SIGNAL(triggered(bool)),sheet,SLOT(setAutoRecalculate(bool)));
+
+    sortAction = new QAction(tr("排序"),this);
+    sortAction->setStatusTip(tr("按条件排序"));
+    sortAction->setShortcut(tr("Shift+O"));
+    connect(sortAction,SIGNAL(triggered()),this,SLOT(sort()));
+
+    groupByAction = new QAction(tr("分类汇总"),this);
+    groupByAction->setStatusTip(tr("分类汇总"));
+    connect(groupByAction,SIGNAL(triggered()),this,SLOT(createGroupByToolBar()));
+    hideGroupByAction = new QAction(tr("取消分类汇总"),this);
+    connect(hideGroupByAction,SIGNAL(triggered()),this,SLOT(cancellGroupBy()));
+}
+
+void MainWindow::createFormulaActions()
+//font,color,alignment
+{
     fontAction = new QAction(tr("字体"),this);
     connect(fontAction,SIGNAL(triggered()),this,SLOT(setFont()));
     textColorAction = new QAction(tr("字体颜色"),this);
@@ -178,49 +256,11 @@ void MainWindow::createActions()
     connect(topAlignmentAction,SIGNAL(triggered()),this,SLOT(setTopAlignment()));
     bottomAlignmentAction = new QAction(tr("基于底线对齐"),this);
     connect(bottomAlignmentAction,SIGNAL(triggered()),this,SLOT(setBottomAlignment()));
+}
 
-    findAction = new QAction(tr("查找"),this);
-    findAction->setStatusTip(tr("查找"));
-    findAction->setShortcut(QKeySequence::Find);
-    connect(findAction,SIGNAL(triggered()),this,SLOT(find()));
-    goToCellAction = new QAction(tr("前往"),this);
-    goToCellAction->setStatusTip(tr("前往"));
-    goToCellAction->setShortcut(tr("Ctrl+T"));
-    connect(goToCellAction,SIGNAL(triggered()),this,SLOT(goToCell()));
-    functionAction = new QAction(tr("函数"),this);
-    functionAction->setStatusTip(tr("应用函数"));
-    connect(functionAction,SIGNAL(triggered()),sheet,SLOT(useFunction()));
-
-    recalculateAction = new QAction(tr("重新计算"),this);
-    recalculateAction->setStatusTip(tr("重新计算表格中的公式"));
-    connect(recalculateAction,SIGNAL(triggered()),sheet,SLOT(recalculate()));
-    sortAction = new QAction(tr("排序"),this);
-    sortAction->setStatusTip(tr("按条件排序"));
-    sortAction->setShortcut(tr("Shift+O"));
-    connect(sortAction,SIGNAL(triggered()),this,SLOT(sort()));
-    autoRecalcAction  =  new QAction(tr("自动重新计算"),this);
-    autoRecalcAction->setStatusTip(tr("设置是否自动重新计算表格中的公式"));
-    connect(autoRecalcAction,SIGNAL(triggered(bool)),sheet,SLOT(setAutoRecalculate(bool)));
-
-    showGridAction = new QAction(tr("&显示边线"),this);
-    showGridAction->setCheckable(true);
-    showGridAction->setChecked(sheet->showGrid());
-    showGridAction->setStatusTip(tr("显示或隐藏单元格的边线"));
-    connect(showGridAction,SIGNAL(toggled(bool)),
-        sheet,SLOT(setShowGrid(bool)));
-    defaultAlignmentAction = new QAction(tr("&使用默认对齐"),this);
-    defaultAlignmentAction->setCheckable(true);
-    defaultAlignmentAction->setChecked(sheet->getDefaultAlignment());
-    defaultAlignmentAction->setStatusTip(tr("默认对齐"));
-    connect(defaultAlignmentAction,SIGNAL(toggled(bool)),
-        sheet,SLOT(setDefaultAlignment(bool)));
-    autoResizeAction = new QAction(tr("&使用自动调整"),this);
-    autoResizeAction->setCheckable(true);
-    autoResizeAction->setChecked(sheet->getAutoResize());
-    autoResizeAction->setStatusTip(tr("自动调整"));
-    connect(autoResizeAction,SIGNAL(toggled(bool)),
-        sheet,SLOT(setAutoResize(bool)));
-
+void MainWindow::createOtherActions()
+//about,gridStyle
+{
     aboutAction = new QAction(tr("&关于"),this);
     aboutAction->setStatusTip(tr("关于我们"));
     connect(aboutAction,SIGNAL(triggered()),this,SLOT(about()));
@@ -236,6 +276,18 @@ void MainWindow::createActions()
     dotGridStyleAction = new QAction(tr("点线"),this);
     connect(dotGridStyleAction,SIGNAL(triggered()),this,SLOT(setDotGrid()));
     connect(dotGridStyleAction,SIGNAL(triggered()),this,SLOT(showGrid()));
+}
+
+void MainWindow::createRecentFileActions()
+{
+    for(int i = 0;i<MaxRecentFiles;i++)
+    {
+        recentFileActions[i] = new QAction(this);
+        recentFileActions[i]->setVisible(false);
+        connect(recentFileActions[i],SIGNAL(triggered()),
+            this,SLOT(openRecentFile()));
+    }
+
 }
 
 void MainWindow::createSubMenus()
@@ -327,11 +379,15 @@ void MainWindow::createMenus()
     toolsMenu->addAction(sortAction);
     toolsMenu->addAction(findAction);
     toolsMenu->addAction(goToCellAction);
+    toolsMenu->addAction(groupByAction);
+    toolsMenu->addAction(hideGroupByAction);
+    hideGroupByAction->setVisible(false);
 
     optionsMenu = menuBar()->addMenu(tr("选项"));
     optionsMenu->addAction(showGridAction);
     optionsMenu->addAction(defaultAlignmentAction);
     optionsMenu->addAction(autoResizeAction);
+    optionsMenu->addAction(autoSaveAction);
 
     menuBar()->addSeparator();
 
@@ -359,12 +415,14 @@ void MainWindow::createContextMenu()
 void MainWindow::createToolBars()
 {
     fileToolBar = addToolBar(tr("文件"));
+    fileToolBar->setMinimumHeight(30);
     fileToolBar->addAction(newAction);
     fileToolBar->addAction(openAction);
     fileToolBar->addAction(saveAction);
     fileToolBar->addSeparator();
 
     editToolBar = addToolBar(tr("编辑"));
+    editToolBar->setMinimumHeight(30);
     editToolBar->addAction(cutAction);
     editToolBar->addAction(copyAction);
     editToolBar->addAction(pasteAction);
@@ -376,6 +434,7 @@ void MainWindow::createToolBars()
     editToolBar->addSeparator();
 
     formatToolBar = addToolBar(tr("单元格格式"));
+    formatToolBar->setMinimumHeight(30);
     formatToolBar->addAction(fontAction);
     formatToolBar->addAction(textColorAction);
     formatToolBar->addAction(textColorIconAction);
@@ -384,7 +443,13 @@ void MainWindow::createToolBars()
     formatToolBar->addAction(backgroundColorIconAction);
     formatToolBar->addSeparator();
 
+    gridStyleToolBar = addToolBar(tr("边线风格"));
+    gridStyleToolBar->addAction(gridStyleSubMenu->menuAction());
+    gridStyleToolBar->setMinimumHeight(30);
+
     alignmentToolBar = addToolBar(tr("对齐"));
+    insertToolBarBreak(alignmentToolBar);
+    alignmentToolBar->setMinimumHeight(30);
     alignmentToolBar->addAction(leftAlignmentAction);
     alignmentToolBar->addAction(centerAlignmentAction);
     alignmentToolBar->addAction(rightAlignmentAction);
@@ -392,9 +457,42 @@ void MainWindow::createToolBars()
     alignmentToolBar->addAction(topAlignmentAction);
     alignmentToolBar->addAction(bottomAlignmentAction);
     alignmentToolBar->addSeparator();
+}
 
-    gridStyleToolBar = addToolBar(tr("边线风格"));
-    gridStyleToolBar->addAction(gridStyleSubMenu->menuAction());
+void MainWindow::createGroupByToolBar()
+{
+    groupByAction->setEnabled(false);
+    groupByToolBar = addToolBar(tr("分类汇总"));
+    insertToolBarBreak(groupByToolBar);
+    groupByToolBar->setMinimumHeight(30);
+    groupByToolBar->setAllowedAreas(Qt::TopToolBarArea);
+    groupByToolBar->setMovable(false);
+    groupByToolBar->setFloatable(false);
+    int ColumnCount = sheet->getColumnCount();
+    for(int i = 0;i<ColumnCount;i++)
+    {
+        QSet<QString> context;
+        sheet->getColumnContext(i,context,maxRow);
+        if(context.count() == 0)
+            continue;
+        QMenu *subMenu = new QMenu(tr("%1列").arg(QString('A' + i)));
+        for(auto it = context.begin(); it != context.end();it++)
+        {
+            QAction *action = new QAction(this);
+            action->setText(*it);
+            QString str = (*it) +'_' + QString(i+'0');
+            //the formula of action->Data is like "hello_2"
+            action->setData(str);
+            connect(action,SIGNAL(triggered()),this,SLOT(hideSpecificRow()));
+            subMenu->addAction(action);
+        }
+        QAction *menuAction = new QAction(this);
+        menuAction = subMenu->menuAction();
+        menuAction->setToolTip(tr("显示符合条件的行和空行"));
+        groupByToolBar->addAction(menuAction);
+        groupByToolBar->addSeparator();
+    }
+    hideGroupByAction->setVisible(true);
 }
 
 void MainWindow::createStatusBar()
@@ -427,6 +525,35 @@ void MainWindow::sheetModified()
     updateStatusBar();
 }
 
+void MainWindow::setAutoSave(bool ok)
+{
+    autoSave = ok;
+    if(autoSave)
+        saveAfterTimeInterval();
+}
+
+void MainWindow::saveAfterTimeInterval()
+{
+    if(autoSave)
+    {
+        if(timer == nullptr)
+            timer = new QTimer(this);
+        if(isWindowModified())
+        {
+            statusBar()->showMessage(tr("文件已自动保存"),10000);
+            //keep the message for 10 seconds
+            save();
+        }
+        connect(timer,SIGNAL(timeout()),this,SLOT(saveAfterTimeInterval()));
+        timer->start(600 * 1000);//save after 10 minutes
+    }
+    else
+    {
+        delete timer;
+        timer = nullptr;
+    }
+}
+
 void MainWindow::newFile()
 {
     if(okToContinue())
@@ -445,16 +572,17 @@ bool MainWindow::okToContinue()
             tr("%1 已经改变。\n"
             "是否保存?").arg(strippedName(curFile)),
             QMessageBox::Yes|QMessageBox::No|QMessageBox::Cancel);
-        if(QMessageBox::Yes == r)
+        switch(r)
         {
+        case QMessageBox::Yes:
             return save();
-        }
-        else
-        {
-            if(QMessageBox::Cancel == r)
-                return false;
-            else
-                setWindowModified(false);
+        case QMessageBox::Cancel:
+            return false;
+        case QMessageBox::No:
+            setWindowModified(false);
+            break;
+        default:
+            return false;
         }
     }
     return true;
@@ -602,6 +730,7 @@ void MainWindow::setCurrentFile(const QString &fileName)
 }
 
 QString MainWindow::strippedName(const QString &fullFileName)
+//strip the fileName from path
 {
     return QFileInfo(fullFileName).fileName();
 }
@@ -699,8 +828,27 @@ void MainWindow::sort()
     if(dialog.exec())
     {
         EasyTableCompare compare;
-        dialog.setSortKeyandAscending(compare);
-        sheet->sort(compare);
+        bool defaultChoose = true;
+        int choice = QMessageBox::question(this,tr("排序"),
+                                           tr("发现您只选取了一部分区域。\n"
+                                               "我们将自动扩展排序的范围。\n"
+            "是否同意?"),
+            QMessageBox::Yes|QMessageBox::No);
+        switch(choice)
+        {
+        case QMessageBox::Yes:
+
+            dialog.setColumnRange('A','A'+range.rightColumn());
+            dialog.setSortKeyandAscending(compare);
+            sheet->sort(compare,defaultChoose);
+            break;
+        case QMessageBox::No:
+            dialog.setSortKeyandAscending(compare);
+            sheet->sort(compare,defaultChoose);
+            break;
+        default:
+            break;
+        }
     }
 }
 
@@ -834,10 +982,40 @@ void MainWindow::setBackgroundColor()
     }
 }
 
+void MainWindow::hideSpecificRow()
+{
+    QAction *action = qobject_cast<QAction *>(sender());
+    //transform QObject* to QAction*
+    if(action)
+    {
+        QString str = action->data().toString();
+//action->data is like "hello_0",the part before _ is the context of model
+//and the part after is the number of column
+        QStringList strList = str.split('_');
+        int column = strList[1].toInt();
+        int range = 0;
+        for(auto it = maxRow.begin();it != maxRow.end();it++)
+        {
+            if((*it)>range)
+                range = *it;
+        }
+        sheet->hideRowUnlike(column,strList[0],range);
+    }
+}
+
+void MainWindow::cancellGroupBy()
+{
+    sheet->showHiddenRanges();
+    groupByToolBar->hide();
+    groupByAction->setEnabled(true);
+    hideGroupByAction->setVisible(false);
+    maxRow.clear();
+}
+
 void MainWindow::about()
 {
     QMessageBox::about(this,tr("About EasyTable"),
-        tr("<h1>EasyTable 0.8</h1>"
+        tr("<h1>EasyTable 0.7</h1>"
            "<br/>"
         "<em>Copyleft &copy; BugMore Software Inc.</em>"));
 }
@@ -850,6 +1028,7 @@ void MainWindow::writeSettings()
     settings.setValue("showGrid",showGridAction->isChecked());
     settings.setValue("defaultAlignment",defaultAlignmentAction->isChecked());
     settings.setValue("autoRecalc",autoRecalcAction->isChecked());
+    settings.setValue("autoSave",autoSaveAction->isChecked());
 }
 
 void MainWindow::readSettings()
@@ -865,4 +1044,6 @@ void MainWindow::readSettings()
     defaultAlignmentAction->setChecked(defaultAlignment);
     bool autoRecalc = settings.value("autoRecalc",true).toBool();
     autoRecalcAction->setChecked(autoRecalc);
+    bool autoSave = settings.value("autoSave",false).toBool();
+    autoSaveAction->setChecked(autoSave);
 }
