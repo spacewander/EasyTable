@@ -12,6 +12,7 @@
 #include <QList>
 #include <QLineEdit>
 
+#include <QMap>
 #include <QMenu>
 #include <QMenuBar>
 #include <QMessageBox>
@@ -48,6 +49,8 @@ MainWindow::MainWindow(QWidget *parent)
     createToolBars();
     readSettings();
     findDialog = nullptr;
+    tipToolBar = nullptr;
+    tipMap = sheet->tipMap;
     setCurrentFile(tr("未命名"));
 }
 
@@ -162,7 +165,7 @@ void MainWindow::createEditActions()
 }
 
 void MainWindow::createOptionActions()
-//showGrid,defaultAlignment,autoResize,autoSave
+//showGrid,defaultAlignment,autoResize,autoSave,autoTip,show/hideMainToolBar
 {
     showGridAction = new QAction(tr("&显示边线"),this);
     showGridAction->setCheckable(true);
@@ -170,6 +173,7 @@ void MainWindow::createOptionActions()
     showGridAction->setStatusTip(tr("显示或隐藏单元格的边线"));
     connect(showGridAction,SIGNAL(toggled(bool)),
         sheet,SLOT(setShowGrid(bool)));
+
     defaultAlignmentAction = new QAction(tr("&使用默认对齐"),this);
     defaultAlignmentAction->setCheckable(true);
     defaultAlignmentAction->setChecked(sheet->getDefaultAlignment());
@@ -183,12 +187,28 @@ void MainWindow::createOptionActions()
     autoResizeAction->setStatusTip(tr("自动调整"));
     connect(autoResizeAction,SIGNAL(toggled(bool)),
         sheet,SLOT(setAutoResize(bool)));
+
     autoSaveAction = new QAction(tr("&使用定时保存"),this);
     autoSaveAction->setCheckable(true);
     autoSaveAction->setChecked(autoSave);
     autoSaveAction->setStatusTip(tr("定时保存"));
     connect(autoSaveAction,SIGNAL(toggled(bool)),
         this,SLOT(setAutoSave(bool)));
+
+    autoTipAction = new QAction(tr("&使用智能提示"),this);
+    autoTipAction->setCheckable(true);
+    autoTipAction->setChecked(sheet->getAutoTip());
+    autoTipAction->setStatusTip(tr("智能提示"));
+    autoTipAction->setShortcut(tr("Alt+t"));
+    connect(autoTipAction,SIGNAL(toggled(bool)),
+        this,SLOT(createTipToolBar(bool)));
+
+    showMainToolBarAction = new QAction(tr("显示窗口菜单栏"),this);
+    showMainToolBarAction->setShortcut(tr("Alt+s"));
+    connect(showMainToolBarAction,SIGNAL(triggered()),this,SIGNAL(showToolBar()));
+    hideMainToolBarAction = new QAction(tr("隐藏窗口菜单栏"),this);
+    hideMainToolBarAction->setShortcut(tr("Alt+h"));
+    connect(hideMainToolBarAction,SIGNAL(triggered()),this,SIGNAL(hideToolBar()));
 }
 
 void MainWindow::createToolActions()
@@ -322,12 +342,14 @@ void MainWindow::createSubMenus()
     hideSubMenu->addAction(hideColumnsAction);
 
     gridStyleSubMenu = new QMenu(tr("边线风格"));
+    gridStyleSubMenu->setCursor(QCursor(Qt::PointingHandCursor));
     gridStyleSubMenu->addAction(noneGridStyleAction);
     gridStyleSubMenu->addAction(solidGridStyleAction);
     gridStyleSubMenu->addAction(dashGridStyleAction);
     gridStyleSubMenu->addAction(dotGridStyleAction);
 
     recentFilesSubMenu = new QMenu(tr("最近打开的文件"));
+    recentFilesSubMenu->setCursor(QCursor(Qt::PointingHandCursor));
     for(int i = 0;i<MaxRecentFiles;i++)
     {
         recentFilesSubMenu->addAction(recentFileActions[i]);
@@ -341,6 +363,7 @@ void MainWindow::createMenus()
     createSubMenus();
 
     fileMenu = menuBar()->addMenu(tr("文件"));
+    fileMenu->setCursor(QCursor(Qt::PointingHandCursor));
     fileMenu->addAction(newAction);
     fileMenu->addAction(openAction);
     fileMenu->addAction(saveAction);
@@ -361,6 +384,7 @@ void MainWindow::createMenus()
     fileMenu->addAction(exitAction);
 
     editMenu = menuBar()->addMenu(tr("编辑"));
+    editMenu->setCursor(QCursor(Qt::PointingHandCursor));
     editMenu->addAction(cutAction);
     editMenu->addAction(copyAction);
     editMenu->addAction(pasteAction);
@@ -376,6 +400,7 @@ void MainWindow::createMenus()
     editMenu->addAction(showHiddenRangesAction);
 
     toolsMenu = menuBar()->addMenu(tr("工具"));
+    toolsMenu->setCursor(QCursor(Qt::PointingHandCursor));
     toolsMenu->addAction(sortAction);
     toolsMenu->addAction(findAction);
     toolsMenu->addAction(goToCellAction);
@@ -384,14 +409,19 @@ void MainWindow::createMenus()
     hideGroupByAction->setVisible(false);
 
     optionsMenu = menuBar()->addMenu(tr("选项"));
+    optionsMenu->setCursor(QCursor(Qt::PointingHandCursor));
     optionsMenu->addAction(showGridAction);
     optionsMenu->addAction(defaultAlignmentAction);
     optionsMenu->addAction(autoResizeAction);
     optionsMenu->addAction(autoSaveAction);
+    optionsMenu->addAction(autoTipAction);
+    optionsMenu->addAction(showMainToolBarAction);
+    optionsMenu->addAction(hideMainToolBarAction);
 
     menuBar()->addSeparator();
 
     helpMenu = menuBar()->addMenu(tr("帮助"));
+    helpMenu->setCursor(QCursor(Qt::PointingHandCursor));
     helpMenu->addAction(aboutAction);
 }
 
@@ -415,6 +445,7 @@ void MainWindow::createContextMenu()
 void MainWindow::createToolBars()
 {
     fileToolBar = addToolBar(tr("文件"));
+    fileToolBar->setCursor(QCursor(Qt::PointingHandCursor));
     fileToolBar->setMinimumHeight(30);
     fileToolBar->addAction(newAction);
     fileToolBar->addAction(openAction);
@@ -422,6 +453,7 @@ void MainWindow::createToolBars()
     fileToolBar->addSeparator();
 
     editToolBar = addToolBar(tr("编辑"));
+    editToolBar->setCursor(QCursor(Qt::PointingHandCursor));
     editToolBar->setMinimumHeight(30);
     editToolBar->addAction(cutAction);
     editToolBar->addAction(copyAction);
@@ -434,6 +466,7 @@ void MainWindow::createToolBars()
     editToolBar->addSeparator();
 
     formatToolBar = addToolBar(tr("单元格格式"));
+    formatToolBar->setCursor(QCursor(Qt::PointingHandCursor));
     formatToolBar->setMinimumHeight(30);
     formatToolBar->addAction(fontAction);
     formatToolBar->addAction(textColorAction);
@@ -448,6 +481,7 @@ void MainWindow::createToolBars()
     gridStyleToolBar->setMinimumHeight(30);
 
     alignmentToolBar = addToolBar(tr("对齐"));
+    alignmentToolBar->setCursor(QCursor(Qt::PointingHandCursor));
     insertToolBarBreak(alignmentToolBar);
     alignmentToolBar->setMinimumHeight(30);
     alignmentToolBar->addAction(leftAlignmentAction);
@@ -463,11 +497,7 @@ void MainWindow::createGroupByToolBar()
 {
     groupByAction->setEnabled(false);
     groupByToolBar = addToolBar(tr("分类汇总"));
-    insertToolBarBreak(groupByToolBar);
-    groupByToolBar->setMinimumHeight(30);
-    groupByToolBar->setAllowedAreas(Qt::TopToolBarArea);
-    groupByToolBar->setMovable(false);
-    groupByToolBar->setFloatable(false);
+    createTipToolBarView();
     int ColumnCount = sheet->getColumnCount();
     for(int i = 0;i<ColumnCount;i++)
     {
@@ -493,6 +523,15 @@ void MainWindow::createGroupByToolBar()
         groupByToolBar->addSeparator();
     }
     hideGroupByAction->setVisible(true);
+}
+
+void MainWindow::createGroupByToolBarView()
+{
+    insertToolBarBreak(groupByToolBar);
+    groupByToolBar->setMinimumHeight(30);
+    groupByToolBar->setAllowedAreas(Qt::TopToolBarArea);
+    groupByToolBar->setMovable(false);
+    groupByToolBar->setFloatable(false);
 }
 
 void MainWindow::createStatusBar()
@@ -688,6 +727,7 @@ void MainWindow::closeWindow()
 }
 
 void MainWindow::mousePressEvent(QMouseEvent *event)
+//use click left button of mouse to show the toolBar in MainWidget
 {
     if(event->y() <= 60)
     {
@@ -795,6 +835,11 @@ void MainWindow::find()
         connect(findDialog,SIGNAL(findInAll(const QString&,
             Qt::CaseSensitivity)),
             sheet,SLOT(findInAll(const QString&,
+            Qt::CaseSensitivity)));
+
+        connect(findDialog,SIGNAL(findFromHere(const QString&,
+            Qt::CaseSensitivity)),
+            sheet,SLOT(findFromHere(const QString&,
             Qt::CaseSensitivity)));
     }
     findDialog->setWindowOpacity(1.0);
@@ -1015,7 +1060,7 @@ void MainWindow::cancellGroupBy()
 void MainWindow::about()
 {
     QMessageBox::about(this,tr("About EasyTable"),
-        tr("<h1>EasyTable 0.7</h1>"
+        tr("<h1>EasyTable 0.9</h1>"
            "<br/>"
         "<em>Copyleft &copy; BugMore Software Inc.</em>"));
 }
@@ -1028,6 +1073,7 @@ void MainWindow::writeSettings()
     settings.setValue("showGrid",showGridAction->isChecked());
     settings.setValue("defaultAlignment",defaultAlignmentAction->isChecked());
     settings.setValue("autoRecalc",autoRecalcAction->isChecked());
+    settings.setValue("autoResize",autoResizeAction->isChecked());
     settings.setValue("autoSave",autoSaveAction->isChecked());
 }
 
@@ -1044,6 +1090,194 @@ void MainWindow::readSettings()
     defaultAlignmentAction->setChecked(defaultAlignment);
     bool autoRecalc = settings.value("autoRecalc",true).toBool();
     autoRecalcAction->setChecked(autoRecalc);
+    bool autoResize = settings.value("autoResize",true).toBool();
+    autoResizeAction->setChecked(autoResize);
     bool autoSave = settings.value("autoSave",false).toBool();
     autoSaveAction->setChecked(autoSave);
+}
+
+void MainWindow::createTipToolBar(bool ok)
+{
+    sheet->setAutoTip(ok);
+    if(ok)
+    {
+        connect(sheet,SIGNAL(modified()),this,SLOT(refreshTipTool()));
+        connect(sheet,SIGNAL(currentCellChanged(int,int,int,int)),this,SLOT(refreshTipTool()));
+        if(sheet->tipMap.isEmpty())
+            sheet->initialTipMap();
+        if(tipToolBar != nullptr)
+        {
+            tipToolBar->show();
+            return;
+        }
+        tipToolBar = addToolBar(tr("补全"));
+        createTipToolBarView();
+        createTipToolBarActions();
+        tipToolBar->show();
+    }
+    else
+    {
+        tipToolBar->hide();
+        disconnect(sheet,SIGNAL(modified()),this,SLOT(refreshTipTool()));
+        disconnect(sheet,SIGNAL(currentCellChanged(int,int,int,int)),this,SLOT(refreshTipTool()));
+    }
+}
+
+void MainWindow::createTipToolBarView()
+{
+    tipToolBar->setToolTip(tr("使用Alt + 数字 进行补全"));
+    insertToolBarBreak(tipToolBar);
+    tipToolBar->setMinimumHeight(30);
+    tipToolBar->setAllowedAreas(Qt::TopToolBarArea);
+    tipToolBar->setMovable(false);
+    tipToolBar->setFloatable(false);
+    QLabel *label = new QLabel(tr("使用Alt + 数字 进行补全"));
+    tipToolBar->addWidget(label);
+    tipToolBar->addSeparator();
+    tipToolBar->setPalette(QPalette(Qt::green));
+}
+
+void MainWindow::refreshTipTool()
+{
+    //if tipToolBar is not existed in the UI
+    if(tipToolBar == nullptr)
+        createTipToolBar(true);
+    else if(!tipToolBar->isVisible())
+        tipToolBar->show();
+    //else
+    else
+    {
+        QString str = sheet->getCurrentText();
+        int column = sheet->currentColumn();
+        if(str.isEmpty())
+        {
+            createTipToolBarActions(column);
+            tipToolBar->setPalette(QPalette(Qt::magenta));
+        }
+        else
+        {
+            createTipToolBarActions(column,str);
+            tipToolBar->setPalette(QPalette(Qt::cyan));
+        }//end for cell is not empty
+    }//end for the tipToolBar is visible
+}
+
+void MainWindow::destroyTipToolBarActions()
+//delete all the actions in tipToolBar
+{
+    QList<QAction*> listAct = tipToolBar->actions();
+    if(listAct.isEmpty())
+        return;
+    //if there are actions in tipToolBar,clear it
+    for(auto it = listAct.begin() + 2;it != listAct.end();++it)
+    {
+        delete *it;
+        *it = nullptr;
+    }
+    /*
+     *  Note that we need not to delete the first  two action
+     *  Because the first action is an action to show the tip label
+     *  and the second one is a separator action
+    */
+}
+
+/*
+  *  The three functions below create the actions in tipToolBar,so before you
+  *  use them,make sure the tipToolBar is created.
+  *  And I also limit the items(actions) in tipToolBar less than 10.
+  *  The result why I limit the items in tipToolBar should be no more than 10
+  *  is that too much items squeezed in a narrow place does not look good.
+  *  And it is not useful to create too much items since you will be unable
+  *  find your target in a look.
+  */
+
+void MainWindow::createTipToolBarActions()
+//show the 10 items in the beginning of tipMap
+{
+	if(sheet->getTipDirty() == true)
+		tipMap = sheet->tipMap;
+    int count = tipMap.count();
+    QMap<QString,int>::iterator it = tipMap.end() - 1;
+    destroyTipToolBarActions();
+    for(int i = 0;i < 10 && i<count;i++)
+    {
+        QAction *action = new QAction(this);
+        action->setShortcut(tr("Alt+%1").arg(i));
+        //so i should be smaller than 10
+        action->setText(tr("%1: ").arg(i)+it.key());
+        action->setData(it.key());
+        connect(action,SIGNAL(triggered()),this,SLOT(finishCell()));
+        tipToolBar->addAction(action);
+        tipToolBar->addSeparator();
+        --it;
+    }
+}
+
+void MainWindow::createTipToolBarActions(int column)
+//show the 10 items which is in the particular column
+{
+     if(sheet->getTipDirty() == true)
+		tipMap = sheet->tipMap;
+     destroyTipToolBarActions();
+     QList<QString> strList = tipMap.keys(column);
+     QList<QString>::iterator it = strList.begin();
+     int count = strList.count();
+     if(count == 0)
+     {
+        //if the column is an empty column
+         createTipToolBarActions();
+         return;
+     }
+     for(int i = 0;i < 10 && i<count;i++)
+     {
+         QAction *action = new QAction(this);
+         action->setShortcut(tr("Alt+%1").arg(i));
+         action->setText(tr("%1: ").arg(i) + (*it));
+         action->setData(*it);
+         connect(action,SIGNAL(triggered()),this,SLOT(finishCell()));
+         tipToolBar->addAction(action);
+         tipToolBar->addSeparator();
+         ++it;
+     }
+}
+
+void MainWindow::createTipToolBarActions(int column, QString str)
+{
+    if(sheet->getTipDirty() == true)
+		tipMap = sheet->tipMap;
+    destroyTipToolBarActions();
+    QSet<QString> tipSet;
+    QList<QString> listStr = tipMap.keys(column);
+    //listStr contains the text in current column
+    for(auto it = listStr.begin();it != listStr.end();++it)
+    {
+        if((*it).contains(str))
+            tipSet.insert(*it);
+        //if the text contains the str,add it to the tipSet
+    }
+    int count = tipSet.count();
+    auto it = tipSet.begin();
+    //display the contain of tipSet
+    for(int i = 0;i < 10 && i<count;i++)
+    {
+        QAction *action = new QAction(this);
+        action->setShortcut(tr("Alt+%1").arg(i));
+        action->setText(tr("%1: ").arg(i)+*it);
+        action->setData(*it);
+        connect(action,SIGNAL(triggered()),this,SLOT(finishCell()));
+        tipToolBar->addAction(action);
+        tipToolBar->addSeparator();
+        ++it;
+    }//end for create actions
+}
+
+void MainWindow::finishCell()
+{
+    QAction *action = qobject_cast<QAction *>(sender());
+    //transform QObject* to QAction*
+    if(action)
+    {
+        QString str = action->data().toString();
+        sheet->finish(str);
+    }
 }

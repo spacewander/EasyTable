@@ -30,13 +30,16 @@ FindDialog::FindDialog(QWidget *parent) :
     forwardRadioButton = new QRadioButton(tr("向后查找"));
     forwardRadioButton->setShortcut(QKeySequence::FindNext);
     findInAllRadioButton = new QRadioButton(tr("全文件查找"));
-    findInAllRadioButton->setShortcut(QKeySequence::Find);
+    findFromHereRadioButton = new QRadioButton(tr("从当前开始全文查找"));
+    findFromHereRadioButton->setChecked(true);
+    findFromHereRadioButton->setShortcut(QKeySequence::Find);
 
     radioButtonGroupBox = new QGroupBox(tr("查找条件组"));
     QVBoxLayout *groupBoxLayout = new QVBoxLayout;
     groupBoxLayout->addWidget(backwardRadioButton);
     groupBoxLayout->addWidget(forwardRadioButton);
     groupBoxLayout->addWidget(findInAllRadioButton);
+    groupBoxLayout->addWidget(findFromHereRadioButton);
     radioButtonGroupBox->setLayout(groupBoxLayout);
 
 
@@ -81,6 +84,10 @@ void FindDialog::findClicked()
     else if(forwardRadioButton->isChecked())
     {
         emit findNext(text,cs);
+    }
+    else if(findFromHereRadioButton->isChecked())
+    {
+        emit findFromHere(text,cs);
     }
     else
     {

@@ -29,7 +29,7 @@ private:
     mutable bool cacheIsDirty;
     bool defaultAlignment;
 signals:
-    
+
 public slots:
     
 };

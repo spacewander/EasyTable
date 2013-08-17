@@ -20,6 +20,7 @@ signals:
     void findNext(const QString &str,Qt::CaseSensitivity cs);
     void findPrevious(const QString &str,Qt::CaseSensitivity cs);
     void findInAll(const QString &str,Qt::CaseSensitivity cs);
+    void findFromHere(const QString &str,Qt::CaseSensitivity cs);
 public slots:
     void findClicked();
     void enableFindButton(const QString &text);
@@ -31,6 +32,7 @@ private:
     QRadioButton *backwardRadioButton;
     QRadioButton *forwardRadioButton;
     QRadioButton *findInAllRadioButton;
+    QRadioButton *findFromHereRadioButton;
     QGroupBox *radioButtonGroupBox;
 
     QPushButton *findButton;

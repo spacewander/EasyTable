@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QMap>
 
 class QAction;
 class QLabel;
@@ -12,13 +13,14 @@ class GotoCellDialog;
 
 class MainWindow : public QMainWindow
 {
-    Q_OBJECT
+   Q_OBJECT
 
 public:
     MainWindow(QWidget *parent = 0);
     friend class MainWidget;
     //I have to declare MainWidget as the friend class of MainWindow,
     //so that MainWidget is able to call the private methods of MainWindow
+
 protected:
     void closeEvent(QCloseEvent* event);
     void mousePressEvent(QMouseEvent *event);
@@ -32,7 +34,7 @@ signals:
     void showToolBar();
     void hideToolBar();
 
-private slots:
+public slots:
     void newFile();
     void open();
     bool save();
@@ -40,13 +42,16 @@ private slots:
     void closeWindow();
     void openRecentFile();
     void closeAllWindow();
+    void print();
+    void setAutoSave(bool ok);
 
+private slots:
     void updateStatusBar();
     void sheetModified();
-    void setAutoSave(bool ok);
     void saveAfterTimeInterval();
+    void createTipToolBar(bool ok);
+    void refreshTipTool();
 
-    void print();
     void find();
     void goToCell();
     void sort();
@@ -71,6 +76,8 @@ private slots:
     void createGroupByToolBar();
     void hideSpecificRow();
     void cancellGroupBy();
+    void finishCell();
+
 private:
     void createActions();
     void createRecentFileActions();
@@ -86,9 +93,17 @@ private:
     void createContextMenu();
     void createToolBars();
     void createStatusBar();
+    void createGroupByToolBarView();
+    void createTipToolBarView();
 
     void readSettings();
     void writeSettings();
+
+    void createTipToolBarActions(int column);
+    void createTipToolBarActions();
+    void createTipToolBarActions(int column,QString str);
+    void destroyTipToolBarActions();
+    //bool compareForTipMap(QMap<QString,int>::iterator &a,QMap<QString,int>::iterator &b);
 
     bool okToContinue();
     bool loadFile(const QString &fileName);
@@ -101,6 +116,7 @@ private:
     FindDialog *findDialog;
     GotoCellDialog *toCell;
     QVector<int> maxRow;
+    QMap<QString,int> tipMap;//key is the text of cell,value is the column of cell
 
     QTimer *timer;
     bool autoSave;
@@ -141,6 +157,7 @@ private:
     QToolBar *alignmentToolBar;
     QToolBar *gridStyleToolBar;
     QToolBar *groupByToolBar;
+    QToolBar *tipToolBar;
 
     QAction *newAction;
     QAction *openAction;
@@ -183,6 +200,9 @@ private:
     QAction *defaultAlignmentAction;
     QAction *autoResizeAction;
     QAction *autoSaveAction;
+    QAction *autoTipAction;
+    QAction *showMainToolBarAction;
+    QAction *hideMainToolBarAction;
 
     QAction *aboutAction;
 

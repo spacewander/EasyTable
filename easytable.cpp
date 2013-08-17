@@ -22,6 +22,8 @@ EasyTable::EasyTable(QWidget *parent) :
     autoRecalc = true;
     defaultAlignment = true;
     autoResize = true;
+    autoTip = false;
+    tipDirty = false;
     RowCount = 32;      //set the number of rows
     ColumnCount = 18;   //set the number of columns
     setItemPrototype(new Cell);
@@ -39,6 +41,8 @@ void EasyTable::connectSignalsAndSlots()
             this,SLOT(somethingChanged()));
     connect(this,SIGNAL(itemChanged(QTableWidgetItem*)),
             this,SLOT(resizeCell(QTableWidgetItem*)));
+    connect(this,SIGNAL(cellChanged(int,int)),
+            this,SLOT(addTipMapItem(int,int)));
 }
 
 void EasyTable::setHeaderItem()
@@ -731,6 +735,52 @@ void EasyTable::findInAll(const QString &str, Qt::CaseSensitivity cs)
         row++;
     }
     QApplication::beep();
+    QMessageBox::information(this,tr("查找"),tr("查找结束,没有找到"
+                                              "<pre>     %1 </pre>").arg(str));
+}
+
+void EasyTable::findFromHere(const QString &str, Qt::CaseSensitivity cs)
+{
+    int row = currentRow();
+    int column = currentColumn()+1;
+    while(row<RowCount)
+    {
+        while(column<ColumnCount)
+        {
+            if(text(row,column).contains(str,cs))
+            {
+                clearSelection();
+                setCurrentCell(row,column);
+                activateWindow();
+                return;
+            }
+            column++;
+        }
+        column = 0;
+        row++;
+    }
+    //go back to search again
+    row = 0;
+    column = 0;
+    while(row<currentRow())
+    {
+        while(column<ColumnCount || (row == currentRow() && column <= currentColumn()))
+        {
+            if(text(row,column).contains(str,cs))
+            {
+                clearSelection();
+                setCurrentCell(row,column);
+                activateWindow();
+                return;
+            }
+            column++;
+        }
+        column = 0;
+        row++;
+    }
+    QApplication::beep();
+    QMessageBox::information(this,tr("查找"),tr("查找结束,没有找到"
+                                              "<pre>    %1 </pre>").arg(str));
 }
 
 void EasyTable::findNext(const QString &str, Qt::CaseSensitivity cs)
@@ -754,6 +804,9 @@ void EasyTable::findNext(const QString &str, Qt::CaseSensitivity cs)
         row++;
     }
     QApplication::beep();
+    QMessageBox::information(this,tr("查找"),tr("向后查找结束,没有找到"
+                                              "<pre>    %1 </pre>"
+                                              "如需继续查找,请使用向前查找").arg(str));
 }
 
 void EasyTable::findPrevious(const QString &str, Qt::CaseSensitivity cs)
@@ -777,6 +830,9 @@ void EasyTable::findPrevious(const QString &str, Qt::CaseSensitivity cs)
         row--;
     }
     QApplication::beep();
+    QMessageBox::information(this,tr("查找"),tr("向前查找结束,没有找到"
+                                              "<pre>    %1 </pre>"
+                                              "如需继续查找,请使用向后查找").arg(str));
 }
 
 void EasyTable::recalculate()
@@ -1038,4 +1094,64 @@ void EasyTable::hideRowUnlike(int column, QString str, int range)
                 hideRow(i);
         }//end if
     }//end for
+}
+
+//In two situation we will call the method below:
+//1.in the constructor of EasyTable
+//2.when tipMenu is created and tipSet is empty
+void EasyTable::initialTipMap()
+{
+    QString str;
+    if(tipMap.isEmpty())
+    {
+        for(int i = 0;i<RowCount;i++)
+        {
+            for(int j = 0;j<ColumnCount;j++)
+            {
+                Cell *c = cell(i,j);
+                if(c != nullptr )
+                {
+                    str = c->text();
+                    if(!str.isEmpty())
+                    {
+                        tipMap.insert(str,j);
+                    }//end if !Empty
+                }//end if !nullptr
+            }//end for column
+        }//end for row
+        setTipDirty(false);
+    }//end if
+}
+
+void EasyTable::addTipMapItem(int row, int column)
+{
+    Cell *c = cell(row,column);
+    QString str;
+    if(c != nullptr)
+    {
+        str = c->text();
+        if(!str.isEmpty())
+        {
+            tipMap.insert(str,column);
+            setTipDirty(true);
+        }//end if !Empty
+    }//end if !nullptr
+}
+
+QString EasyTable::getCurrentText()
+{
+    QTableWidgetItem *item = currentItem();
+    if(item != nullptr)
+        return item->text();
+    else
+        return "";
+}
+
+void EasyTable::finish(QString &str)
+{
+    int row = currentRow();
+    int column = currentColumn();
+    Cell *c = cell(row,column);
+    if(c != nullptr)
+        c->setText(str);
 }

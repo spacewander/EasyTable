@@ -40,6 +40,7 @@ private:
     void setCurrentWindow();
     void initialRecentFilesActions();
     void createActions();
+    void createRecentFileActions();
     void createToolBar();
     void connectSignalAndSlots(MainWindow *curWindow);
 
@@ -51,6 +52,7 @@ private:
 
     QAction *createWindowAction;
     QAction *openWindowAction;
+    QAction *closeCurrentWindowAction;
     QAction *closeAllWindowAction;
 
     QMenu *recentFilesMenu;

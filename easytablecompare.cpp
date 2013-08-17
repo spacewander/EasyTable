@@ -10,7 +10,7 @@ bool EasyTableCompare::operator ()(const QStringList& row1,
         {
             if(row1[column] != row2[column])
             {
-                if(row1[column] != "" && row2[column] != "")
+                if(row1[column] != ""  &&  row2[column] != "")
                 {
                     if(ascending[i])//if sort by ascending
                     {
@@ -47,7 +47,7 @@ bool EasyTableCompare::larger(const QString &a,const QString &b) const
         return a > b;
     else if(!boolForA || !boolForB)
     {
-        return boolForA == false ? true : false;
+        return boolForA == false ;
         //if a is string and b is not,a is larger than b by default.
     }
     else
@@ -70,7 +70,7 @@ bool EasyTableCompare::smaller(const QString &a, const QString &b) const
         return a < b;
     else if(!boolForA || !boolForB)
     {
-        return boolForA == true ? true : false;
+        return boolForA == true ;
         //if a is string and b is not,a is larger than b by default.
     }
     else

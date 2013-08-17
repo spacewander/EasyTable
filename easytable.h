@@ -36,10 +36,18 @@ public:
     bool getDefaultAlignment()const{return defaultAlignment;}
     bool autoRecalculate() const{return autoRecalc;}
     bool getAutoResize() const{return autoResize;}
+    bool getAutoTip() const{return autoTip;}
+    void setAutoTip(bool ok) {autoTip = ok;}
+    bool getTipDirty() const{return tipDirty;}
+    void setTipDirty(bool ok) {tipDirty = ok;}
 
     int getRowCount()const{return RowCount;}
     int getColumnCount()const{return ColumnCount;}
     void getColumnContext(int column,QSet<QString> &strSet,QVector<int> &maxRow);
+
+    QMap<QString,int> tipMap;//key is the text of cell,value is the column of cell
+    void initialTipMap();
+    QString getCurrentText();
 signals:
     void modified();
 
@@ -70,11 +78,15 @@ public slots:
     void findNext(const QString &str,Qt::CaseSensitivity cs);
     void findPrevious(const QString &str,Qt::CaseSensitivity cs);
     void findInAll(const QString &str,Qt::CaseSensitivity cs);
+    void findFromHere(const QString &str,Qt::CaseSensitivity cs);
 
     void setDefaultAlignment(bool ok);
     QTextDocument* getContextForPrint();//get context for print
 
     void useFunction();
+
+    void addTipMapItem(int row,int column);
+    void finish(QString &str);
 private slots:
     void somethingChanged();
 private:
@@ -94,6 +106,8 @@ private:
     void setHeaderItem();
 
     bool autoRecalc;
+    bool autoTip;
+    bool tipDirty;
     bool defaultAlignment;
     QTextDocument* context;
 
