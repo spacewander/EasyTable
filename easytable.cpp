@@ -950,7 +950,15 @@ void EasyTable::defaultSort(const EasyTableCompare &compare, const QTableWidgetS
                                range.leftColumn()+j));
         rows.append(row);
     }
+    //change the keys in compare
+    for(int i = 0 ; i < compare.KeyCount; i++)
+    {
+            if(compare.keys[i] > range.columnCount())
+                ( (EasyTableCompare &)compare).keys[i] =  range.columnCount() - 1;
+    }
+    QMessageBox::information(this,"here",QString('A' + compare.keys[0]));
     qStableSort(rows.begin(),rows.end(),compare);
+    QMessageBox::information(this,"here","b");
     for(i = 0;i<range.rowCount();i++)
     {
         for(int j = 0;j<range.columnCount();j++)

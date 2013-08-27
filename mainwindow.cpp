@@ -497,7 +497,7 @@ void MainWindow::createGroupByToolBar()
 {
     groupByAction->setEnabled(false);
     groupByToolBar = addToolBar(tr("分类汇总"));
-    createTipToolBarView();
+    createGroupByToolBarView();
     int ColumnCount = sheet->getColumnCount();
     for(int i = 0;i<ColumnCount;i++)
     {
@@ -868,11 +868,20 @@ void MainWindow::sort()
 {
     SortDialog dialog(this);
     QTableWidgetSelectionRange range = sheet->selectedRange();
-    dialog.setColumnRange('A'+range.leftColumn(),
+    if (range.leftColumn() != range.rightColumn())
+    {
+        dialog.setColumnRange('A'+range.leftColumn(),
         'A'+range.rightColumn());
+    }
+    else
+    {
+    dialog.setColumnRange('A',
+        'A'+sheet->getColumnCount());
+    }
     if(dialog.exec())
     {
         EasyTableCompare compare;
+        dialog.setSortKeyandAscending(compare);
         bool defaultChoose = true;
         int choice = QMessageBox::question(this,tr("排序"),
                                            tr("发现您只选取了一部分区域。\n"
@@ -882,13 +891,10 @@ void MainWindow::sort()
         switch(choice)
         {
         case QMessageBox::Yes:
-
-            dialog.setColumnRange('A','A'+range.rightColumn());
-            dialog.setSortKeyandAscending(compare);
             sheet->sort(compare,defaultChoose);
             break;
         case QMessageBox::No:
-            dialog.setSortKeyandAscending(compare);
+            defaultChoose = false;
             sheet->sort(compare,defaultChoose);
             break;
         default:
@@ -1033,6 +1039,7 @@ void MainWindow::hideSpecificRow()
     //transform QObject* to QAction*
     if(action)
     {
+        sheet->showHiddenRanges();
         QString str = action->data().toString();
 //action->data is like "hello_0",the part before _ is the context of model
 //and the part after is the number of column
@@ -1060,7 +1067,7 @@ void MainWindow::cancellGroupBy()
 void MainWindow::about()
 {
     QMessageBox::about(this,tr("About EasyTable"),
-        tr("<h1>EasyTable 0.9</h1>"
+        tr("<h1>EasyTable 1.0</h1>"
            "<br/>"
         "<em>Copyleft &copy; BugMore Software Inc.</em>"));
 }

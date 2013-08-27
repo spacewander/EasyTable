@@ -41,12 +41,13 @@ void SortDialog::setColumnRange(QChar first,QChar last)
 
 void SortDialog::setSortKeyandAscending(EasyTableCompare &compare)
 {
+    //currentIndex begins with 0
     compare.keys[0] =
                 ui->primaryColumnCombo->currentIndex();
     compare.keys[1] =
-                ui->secondaryColumnCombo->currentIndex()-1;
+                ui->secondaryColumnCombo->currentIndex();
     compare.keys[2] =
-                ui->tertiaryColumnCombo->currentIndex()-1;
+                ui->tertiaryColumnCombo->currentIndex();
     compare.ascending[0] =
                 (ui->primaryOrderCombo->currentIndex() == 0);
     compare.ascending[1] =

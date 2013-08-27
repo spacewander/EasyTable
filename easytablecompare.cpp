@@ -6,7 +6,7 @@ bool EasyTableCompare::operator ()(const QStringList& row1,
     for(int i = 0;i<KeyCount;i++)
     {
         int column = keys[i];
-        if(column != -1)
+        if(column >= 0)
         {
             if(row1[column] != row2[column])
             {
@@ -39,15 +39,15 @@ bool EasyTableCompare::operator ()(const QStringList& row1,
 bool EasyTableCompare::larger(const QString &a,const QString &b) const
 //return true if a > b,otherwise return false
 {
-    bool boolForA = false;
-    bool boolForB = false;
-    a.toDouble(&boolForA);
-    a.toDouble(&boolForB);
-    if(!boolForA && !boolForB)
+    bool aIsNum = false;
+    bool bIsNum = false;
+    a.toDouble(&aIsNum);
+    b.toDouble(&bIsNum);
+    if(!aIsNum && !bIsNum)
         return a > b;
-    else if(!boolForA || !boolForB)
+    else if(!aIsNum || !bIsNum)
     {
-        return boolForA == false ;
+        return bIsNum == true ;
         //if a is string and b is not,a is larger than b by default.
     }
     else
@@ -62,15 +62,15 @@ bool EasyTableCompare::larger(const QString &a,const QString &b) const
 bool EasyTableCompare::smaller(const QString &a, const QString &b) const
 //the same as larger(QString,QString),but return the opposite result
 {
-    bool boolForA = false;
-    bool boolForB = false;
-    a.toDouble(&boolForA);
-    a.toDouble(&boolForB);
-    if(!boolForA && !boolForB)
+    bool aIsNum = false;
+    bool bIsNum = false;
+    a.toDouble(&aIsNum);
+    b.toDouble(&bIsNum);
+    if(!aIsNum && !bIsNum)
         return a < b;
-    else if(!boolForA || !boolForB)
+    else if(!aIsNum || !bIsNum)
     {
-        return boolForA == true ;
+        return bIsNum == true ;
         //if a is string and b is not,a is larger than b by default.
     }
     else
