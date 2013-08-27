@@ -835,6 +835,11 @@ void EasyTable::findPrevious(const QString &str, Qt::CaseSensitivity cs)
                                               "如需继续查找,请使用向后查找").arg(str));
 }
 
+void EasyTable::replaceSelectedCell(const QString &str)
+{
+    finish(str);
+}
+
 void EasyTable::recalculate()
 {
     for(int column = 0;column<ColumnCount;column++)
@@ -1155,7 +1160,7 @@ QString EasyTable::getCurrentText()
         return "";
 }
 
-void EasyTable::finish(QString &str)
+void EasyTable::finish(const QString &str)
 {
     int row = currentRow();
     int column = currentColumn();

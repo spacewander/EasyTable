@@ -841,6 +841,9 @@ void MainWindow::find()
             Qt::CaseSensitivity)),
             sheet,SLOT(findFromHere(const QString&,
             Qt::CaseSensitivity)));
+
+        connect(findDialog,SIGNAL(replaceSelectedCell(const QString&)),
+                sheet,SLOT(replaceSelectedCell(const QString&)));
     }
     findDialog->setWindowOpacity(1.0);
     findDialog->show();

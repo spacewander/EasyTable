@@ -15,6 +15,10 @@ FindDialog::FindDialog(QWidget *parent) :
     label = new QLabel(tr("内容"));
     lineEdit = new QLineEdit;
     label->setBuddy(lineEdit);
+    replaceLabel = new QLabel(tr("替换为"));
+    replaceLineEdit = new QLineEdit;
+    replaceLabel->setBuddy(replaceLineEdit);
+
     caseCheckBox = new QCheckBox(tr("大小写匹配"));
     caseCheckBox->setShortcut(QKeySequence::ExactMatch);
 
@@ -22,6 +26,8 @@ FindDialog::FindDialog(QWidget *parent) :
     findButton->setShortcut(QKeySequence::Find);
     findButton->setDefault(true);
     findButton->setEnabled(false);
+    replaceButton = new QPushButton(tr("替换"));
+    replaceButton->setEnabled(false);
     closeButton=new QPushButton(tr("关闭"));
     closeButton->setShortcut(QKeySequence::Close);
 
@@ -45,12 +51,21 @@ FindDialog::FindDialog(QWidget *parent) :
 
     connect(lineEdit, SIGNAL(textChanged(const QString &)),this,
             SLOT(enableFindButton(const QString &)));
+    connect(replaceLineEdit, SIGNAL(textChanged(const QString &)),this,
+            SLOT(enableReplaceButton(const QString &)));
     connect(findButton, SIGNAL(clicked()),this, SLOT(findClicked()));
+    connect(replaceButton, SIGNAL(clicked()),this, SLOT(replaceClicked()));
     connect(closeButton, SIGNAL(clicked()),this, SLOT(close()));
 
-    QHBoxLayout *topLeftLayout = new QHBoxLayout;
-    topLeftLayout->addWidget(label);
-    topLeftLayout->addWidget(lineEdit);
+    QVBoxLayout *topLeftLayout = new QVBoxLayout;
+    QHBoxLayout *findLayout = new QHBoxLayout;
+    findLayout->addWidget(label);
+    findLayout->addWidget(lineEdit);
+    QHBoxLayout *replaceLayout = new QHBoxLayout;
+    replaceLayout->addWidget(replaceLabel);
+    replaceLayout->addWidget(replaceLineEdit);
+    topLeftLayout->addLayout(findLayout);
+    topLeftLayout->addLayout(replaceLayout);
 
     QVBoxLayout *leftLayout = new QVBoxLayout;
     leftLayout->addLayout(topLeftLayout);
@@ -59,6 +74,7 @@ FindDialog::FindDialog(QWidget *parent) :
 
     QVBoxLayout *rightLayout = new QVBoxLayout;
     rightLayout->addWidget(findButton);
+    rightLayout->addWidget(replaceButton);
     rightLayout->addWidget(closeButton);
     rightLayout->addStretch();
 
@@ -73,8 +89,8 @@ FindDialog::FindDialog(QWidget *parent) :
 
 void FindDialog::findClicked()
 {
-    QString text=lineEdit->text();
-    Qt::CaseSensitivity cs=
+    QString text = lineEdit->text();
+    Qt::CaseSensitivity cs =
             caseCheckBox->isChecked() ? Qt::CaseSensitive
                                       : Qt::CaseInsensitive;
     if(backwardRadioButton->isChecked())
@@ -99,4 +115,16 @@ void FindDialog::findClicked()
 void FindDialog::enableFindButton(const QString &text)
 {
     findButton->setEnabled(!text.isEmpty());
+    setWindowOpacity(1);
+}
+
+void FindDialog::replaceClicked()
+{
+    emit replaceSelectedCell(replaceLineEdit->text());
+    setWindowOpacity(1);
+}
+
+void FindDialog::enableReplaceButton(const QString &text)
+{
+    replaceButton->setEnabled(!text.isEmpty() && findButton->isEnabled());
 }

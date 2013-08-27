@@ -273,7 +273,7 @@ void MainWidget::initialRecentFilesActions()
             QString text = tr("&%1 %2").arg(i+1)
                 .arg(QFileInfo(recentFiles[i]).fileName());
             recentFileActions[i]->setText(text);
-            recentFileActions[i]->setData(recentFiles);
+            recentFileActions[i]->setData(recentFiles[i]);
             recentFileActions[i]->setVisible(true);
         }
         else

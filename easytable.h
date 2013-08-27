@@ -79,6 +79,7 @@ public slots:
     void findPrevious(const QString &str,Qt::CaseSensitivity cs);
     void findInAll(const QString &str,Qt::CaseSensitivity cs);
     void findFromHere(const QString &str,Qt::CaseSensitivity cs);
+    void replaceSelectedCell(const QString&str);
 
     void setDefaultAlignment(bool ok);
     QTextDocument* getContextForPrint();//get context for print
@@ -86,7 +87,7 @@ public slots:
     void useFunction();
 
     void addTipMapItem(int row,int column);
-    void finish(QString &str);
+    void finish(const QString &str);
 private slots:
     void somethingChanged();
 private:

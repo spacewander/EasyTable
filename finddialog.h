@@ -21,12 +21,17 @@ signals:
     void findPrevious(const QString &str,Qt::CaseSensitivity cs);
     void findInAll(const QString &str,Qt::CaseSensitivity cs);
     void findFromHere(const QString &str,Qt::CaseSensitivity cs);
+    void replaceSelectedCell(const QString &str);
 public slots:
     void findClicked();
+    void replaceClicked();
     void enableFindButton(const QString &text);
+    void enableReplaceButton(const QString &text);
 private:
     QLabel *label;
     QLineEdit *lineEdit;
+    QLabel *replaceLabel;
+    QLineEdit *replaceLineEdit;
     QCheckBox *caseCheckBox;
 
     QRadioButton *backwardRadioButton;
@@ -36,6 +41,7 @@ private:
     QGroupBox *radioButtonGroupBox;
 
     QPushButton *findButton;
+    QPushButton *replaceButton;
     QPushButton *closeButton;
 };
 
