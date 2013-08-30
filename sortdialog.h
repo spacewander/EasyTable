@@ -1,3 +1,7 @@
+/**
+*@file
+*the dialog is for sorting
+*/
 #ifndef SORTDIALOG_H
 #define SORTDIALOG_H
 

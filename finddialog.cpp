@@ -1,4 +1,8 @@
-﻿#include "finddialog.h"
+﻿/**
+*@file
+*use this dialog for finding and replacing
+*/
+#include "finddialog.h"
 
 #include <QDialog>
 #include <QLayout>
@@ -8,7 +12,9 @@
 #include <QCheckBox>
 #include <QGroupBox>
 #include <QRadioButton>
-
+/**
+*the constructor of FindDialog
+*/
 FindDialog::FindDialog(QWidget *parent) :
     QDialog(parent)
 {
@@ -86,7 +92,10 @@ FindDialog::FindDialog(QWidget *parent) :
     setWindowTitle(tr("查找"));
     setFixedHeight(sizeHint().height());
 }
-
+/**
+*when findButton is clicked,emit particular singal to MainWindow
+*and set the dialog translucent
+*/
 void FindDialog::findClicked()
 {
     QString text = lineEdit->text();
@@ -111,19 +120,25 @@ void FindDialog::findClicked()
     }
     setWindowOpacity(0.5);
 }
-
+/**
+*enable FindButton if there is some input,and set the dialog opaque
+*/
 void FindDialog::enableFindButton(const QString &text)
 {
     findButton->setEnabled(!text.isEmpty());
     setWindowOpacity(1);
 }
-
+/**
+*emit the signal to replace,and set the dialog opaque
+*/
 void FindDialog::replaceClicked()
 {
     emit replaceSelectedCell(replaceLineEdit->text());
     setWindowOpacity(1);
 }
-
+/**
+*enable replaceButton if there is some input,and findButton is enabled
+*/
 void FindDialog::enableReplaceButton(const QString &text)
 {
     replaceButton->setEnabled(!text.isEmpty() && findButton->isEnabled());

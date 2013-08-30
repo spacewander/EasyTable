@@ -1,5 +1,18 @@
+/**
+*@class EasyTableCompare
+*store the message for sorting
+*it is a functor only used in sort() and its associated functions
+*/
+/**
+*@file
+*store the message for sorting
+*it is a functor only used in sort() and its associated functions
+*/
 #include "easytablecompare.h"
-
+/**
+*the implement of sort 
+*empty row should be put to the bottom of sheet
+*/
 bool EasyTableCompare::operator ()(const QStringList& row1,
                                      const QStringList& row2) const
 {
@@ -35,9 +48,11 @@ bool EasyTableCompare::operator ()(const QStringList& row1,
     }//end for
     return false;
 }
-
+/**
+*return true if a > b,otherwise return false
+*remember the string value is forever ahead of number value
+*/
 bool EasyTableCompare::larger(const QString &a,const QString &b) const
-//return true if a > b,otherwise return false
 {
     bool aIsNum = false;
     bool bIsNum = false;
@@ -58,9 +73,11 @@ bool EasyTableCompare::larger(const QString &a,const QString &b) const
     }
     return false;
 }
-
+/**
+*the same as larger(QString,QString),but return the opposite result
+*remember the string value is forever ahead of number value
+*/
 bool EasyTableCompare::smaller(const QString &a, const QString &b) const
-//the same as larger(QString,QString),but return the opposite result
 {
     bool aIsNum = false;
     bool bIsNum = false;

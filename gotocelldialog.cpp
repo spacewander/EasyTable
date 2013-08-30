@@ -6,6 +6,9 @@
 #include <QRegExpValidator>
 #include <QLayout>
 
+/**
+*the constructor of GotoCellDialog
+*/
 GotoCellDialog::GotoCellDialog(QWidget *parent) :
     QDialog(parent)
 {
@@ -44,18 +47,24 @@ GotoCellDialog::GotoCellDialog(QWidget *parent) :
     setFixedHeight(sizeHint().height());
     setWindowOpacity(1.0);
 }
-
+/**
+*if the lineEdit gets input , set okButton enable to click.
+*/
 void GotoCellDialog::on_lineEdit_textChanged()
 {
     okButton->setEnabled(lineEdit->hasAcceptableInput());
 }
-
+/**
+*get the row number
+*/
 int GotoCellDialog::getRow()
 {
     QString str = lineEdit->text().toUpper();
     return  str.mid(1).toInt()-1;
 }
-
+/**
+*get the column header name
+*/
 int GotoCellDialog::getColumn()
 {
     QString str = lineEdit->text().toUpper();

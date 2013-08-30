@@ -1,4 +1,14 @@
-﻿#include "mainwidget.h"
+﻿/**
+*@class MainWidget
+*the widget holds all windows
+*it is the top level of this GUI
+*/
+/**
+*@file
+*the widget holds all windows
+*it is the top level of this GUI
+*/
+#include "mainwidget.h"
 #include "mainwindow.h"
 
 #include <QAction>
@@ -10,7 +20,10 @@
 #include <QSettings>
 #include <QToolBar>
 #include <QMessageBox>
-
+/**
+*the constructor of MainWidget
+*create a new MainWindow when the application is opened
+*/
 MainWidget::MainWidget(QWidget *parent) :
     QMainWindow(parent)
 {
@@ -23,18 +36,21 @@ MainWidget::MainWidget(QWidget *parent) :
     createNewMainWindow();
     ifCloseCancell = false;
 }
-
+/**
+*set up the curWindow.Notice the curWindow may be nullptr
+*when something unexpected happens.
+*So remember to check the curWindow after calling this function.
+*/
 void MainWidget::setCurrentWindow()
-//set up the curWindow.Notice the curWindow may be nullptr
-//when something unexpected happens.
-//So remember to check the curWindow after calling this function.
 {
     curWindow = new MainWindow(this);
     curSubWindow = mdiArea->addSubWindow(curWindow);
     connectSignalAndSlots(curWindow);
     curWindow->setFocus();
 }
-
+/**
+*create actions in MainWidget
+*/
 void MainWidget::createActions()
 {
     createWindowAction = new QAction(tr("&新建窗口"),this);
@@ -52,7 +68,11 @@ void MainWidget::createActions()
 
     createRecentFileActions();
 }
-
+/**
+*create actions associated with recent files
+*by using initialRecentFilesActions()
+*And this function generates the interface of recentFiles
+*/
 void MainWidget::createRecentFileActions()
 {
     for(int i = 0;i<MaxRecentFiles;i++)
@@ -64,7 +84,9 @@ void MainWidget::createRecentFileActions()
     }
     initialRecentFilesActions();
 }
-
+/**
+*create toolBar
+*/
 void MainWidget::createToolBar()
 {
     mainToolBar = addToolBar(tr("文件"));
@@ -90,7 +112,9 @@ void MainWidget::createToolBar()
     mainToolBar->setPalette(QPalette(Qt::lightGray));
     mainToolBar->setCursor(QCursor(Qt::PointingHandCursor));
 }
-
+/**
+*connect signals and slots after a new MainWindow is created
+*/
 void MainWidget::connectSignalAndSlots(MainWindow *curWindow)
 {
     connect(curWindow,SIGNAL(updateRecentFileActions()),
@@ -105,7 +129,9 @@ void MainWidget::connectSignalAndSlots(MainWindow *curWindow)
     connect(curWindow,SIGNAL(hideToolBar()),this,SLOT(hideToolBar()));
     connect(curWindow,SIGNAL(closeCancelled()),this,SLOT(setCloseCancelled()));
 }
-
+/**
+*create new MainWindow
+*/
 void MainWidget::createNewMainWindow()
 {
     setCurrentWindow();
@@ -113,7 +139,9 @@ void MainWidget::createNewMainWindow()
     curWindow->showMaximized();
     curSubWindow->showMaximized();
 }
-
+/**
+*open file in a new MainWindow
+*/
 void MainWidget::openNewMainWindow()
 {
     setCurrentWindow();
@@ -122,7 +150,9 @@ void MainWidget::openNewMainWindow()
      hideToolBar();
      curSubWindow->showMaximized();
 }
-
+/**
+*when close action is triggered,call this function to handle it.
+*/
 void MainWidget::closeEvent(QCloseEvent *event)
 {
     closeAllWindow();
@@ -135,7 +165,9 @@ void MainWidget::closeEvent(QCloseEvent *event)
         ifCloseCancell = false;
     }
 }
-
+/**
+*close all windows
+*/
 void MainWidget::closeAllWindow()
 {
     ifCloseCancell = false;
@@ -151,7 +183,9 @@ void MainWidget::closeAllWindow()
     if(ifCloseCancell == false)
         close();
 }
-
+/**
+*close current sub-window
+*/
 void MainWidget::closeSubWindow()
 {
     curSubWindow = mdiArea->currentSubWindow();
@@ -159,15 +193,18 @@ void MainWidget::closeSubWindow()
     {
         curSubWindow->close();
     }
-    if( mdiArea->subWindowList().count( ) <= 1)
-        //if there is only one window,close it despite whether curSubWindow exists or not
-    {
-        (*mdiArea->subWindowList().begin())->close();
-    }
+//    if( mdiArea->subWindowList().count( ) <= 1)
+//        //if there is only one window,close it despite whether curSubWindow exists or not
+//    {
+//        (*mdiArea->subWindowList().begin())->close();
+//    }
     if(mdiArea->currentSubWindow())
         curSubWindow = mdiArea->currentSubWindow();
 }
-
+/**
+*update recentFile actions
+*when a file is opened or created
+*/
 void MainWidget::updateRecentFileActions()
 {
     QMutableStringListIterator i(recentFiles);
@@ -187,7 +224,7 @@ void MainWidget::updateRecentFileActions()
                     .arg(curWindow->
                          strippedName(recentFiles[i]));
                 recentFileActions[i]->setText(text);
-                recentFileActions[i]->setData(recentFiles);
+                recentFileActions[i]->setData(recentFiles[i]);
                 recentFileActions[i]->setVisible(true);
             }
             else
@@ -197,13 +234,17 @@ void MainWidget::updateRecentFileActions()
         }//end for
     }//end if
 }
-
+/**
+*this function aids updateRecentFileActions()
+*/
 void MainWidget::updateRecentFiles(QString &curFile)
 {
     recentFiles.removeAll(curFile);
     recentFiles.prepend(curFile);
 }
-
+/**
+*open a recent files
+*/
 void MainWidget::openRecentFile()
 {
    setCurrentWindow();
@@ -216,7 +257,10 @@ void MainWidget::openRecentFile()
        }
    }
 }
-
+/**
+*when mouse move across specific area
+*show or hide the menubar of MainWidget
+*/
 void MainWidget::mouseMoveEvent(QMouseEvent *event)
 {
     if(event->y() >= 100)
@@ -224,7 +268,10 @@ void MainWidget::mouseMoveEvent(QMouseEvent *event)
     else
         showToolBar();
 }
-
+/**
+*when clicking left button of mouse in specific area
+*show or hide the menubar of MainWidget
+*/
 void MainWidget::mousePressEvent(QMouseEvent *event)
 {
     if(event->y() <= 30 && event->button() == Qt::LeftButton)
@@ -235,7 +282,9 @@ void MainWidget::mousePressEvent(QMouseEvent *event)
             showToolBar();
     }
 }
-
+/**
+*show toolBar and inform all windows
+*/
 void MainWidget::showToolBar()
 {
     mainToolBar->show();
@@ -248,7 +297,9 @@ void MainWidget::showToolBar()
         dynamic_cast<MainWindow*>((*i)->widget())->hideMainToolBarAction->setEnabled(true);
     }
 }
-
+/**
+*hide toolBar and inform all windows
+*/
 void MainWidget::hideToolBar()
 {
     mainToolBar->hide();
@@ -261,7 +312,10 @@ void MainWidget::hideToolBar()
         dynamic_cast<MainWindow*>((*i)->widget())->hideMainToolBarAction->setEnabled(false);
     }
 }
-
+/**
+*initial recent files actions
+*calling by createRecentFileActions()
+*/
 void MainWidget::initialRecentFilesActions()
 {
     QSettings settings("BugMore Software Inc.","EasyTable");
@@ -282,14 +336,18 @@ void MainWidget::initialRecentFilesActions()
         }//end if
     }//end for
 }
-
+/**
+*set ifCloseCancell to true
+*when close action is cancelled
+*/
 void MainWidget::setCloseCancelled()
 {
     ifCloseCancell = true;
 }
-
+/**
+*the user can set their preference view of MainWidget through this method
+*/
 void MainWidget::setView()
-//the user can set their preference view through this method
 {
     mdiArea->tileSubWindows();
     mdiArea->setViewMode(QMdiArea::TabbedView);

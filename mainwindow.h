@@ -1,3 +1,8 @@
+/**
+*@file
+*the MainWindow contains menubar,toolBar,and statusBar and so on
+*it is controller of almost all the functions
+*/
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
@@ -103,7 +108,6 @@ private:
     void createTipToolBarActions();
     void createTipToolBarActions(int column,QString str);
     void destroyTipToolBarActions();
-    //bool compareForTipMap(QMap<QString,int>::iterator &a,QMap<QString,int>::iterator &b);
 
     bool okToContinue();
     bool loadFile(const QString &fileName);
@@ -116,8 +120,9 @@ private:
     FindDialog *findDialog;
     GotoCellDialog *toCell;
     QVector<int> maxRow;
-    QMap<QString,int> tipMap;//key is the text of cell,value is the column of cell
+    QMap<QString,int> tipMap;/// key is the text of cell,value is the column of cell
 
+	/// timer is used to record how many seconds have passed
     QTimer *timer;
     bool autoSave;
 
@@ -131,8 +136,8 @@ private:
     QIcon backgroundColorIcon;
     QIcon &setIconColor(QIcon &icon, QColor color);
 
+	/// should be changed to be the same as the mainwidget
     enum{MaxRecentFiles = 5};
-    //should be changed to be the same as the mainwidget
     QAction *recentFileActions[MaxRecentFiles];
     QAction *separatorAction;
     QMenu *recentFilesSubMenu;

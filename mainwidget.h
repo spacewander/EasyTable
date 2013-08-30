@@ -1,3 +1,8 @@
+/**
+*@file
+*the widget holds all windows
+*it is the top level of this GUI
+*/
 #ifndef MAINWIDGET_H
 #define MAINWIDGET_H
 
@@ -21,7 +26,6 @@ public:
 signals:
     
 public slots:
-
     void openRecentFile();
     void updateRecentFileActions();
     void updateRecentFiles(QString &curFile);
@@ -36,7 +40,6 @@ public slots:
     void hideToolBar();
 
 private:
-
     void setCurrentWindow();
     void initialRecentFilesActions();
     void createActions();
@@ -56,6 +59,7 @@ private:
     QAction *closeAllWindowAction;
 
     QMenu *recentFilesMenu;
+	/// the max number of recent files displayed
     enum{MaxRecentFiles = 5};
     QAction *recentFileActions[MaxRecentFiles];
 

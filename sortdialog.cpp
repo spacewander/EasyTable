@@ -1,9 +1,19 @@
-﻿#include "sortdialog.h"
+﻿/**
+*@class SortDialog
+*the dialog is for sorting
+*/
+/**
+*@file
+*the dialog is for sorting
+*/
+#include "sortdialog.h"
 #include "ui_sortdialog.h"
 #include <QLabel>
 #include <QPushButton>
 #include <QGroupBox>
-
+/**
+*the constructor of SortDialog
+*/
 SortDialog::SortDialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::SortDialog)
@@ -14,12 +24,16 @@ SortDialog::SortDialog(QWidget *parent) :
     layout()->setSizeConstraint(QLayout::SetFixedSize);
     setColumnRange('A','Z');
 }
-
+/**
+*the destructor of SortDialog
+*/
 SortDialog::~SortDialog()
 {
     delete ui;
 }
-
+/**
+*set the value range of columnCombos
+*/
 void SortDialog::setColumnRange(QChar first,QChar last)
 {
     ui->primaryColumnCombo->clear();
@@ -38,7 +52,9 @@ void SortDialog::setColumnRange(QChar first,QChar last)
         ch = ch.unicode()+1;
     }
 }
-
+/**
+*initial the compare keys and the order
+*/
 void SortDialog::setSortKeyandAscending(EasyTableCompare &compare)
 {
     //currentIndex begins with 0

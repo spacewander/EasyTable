@@ -1,3 +1,7 @@
+/**
+*@file
+*EasyTable is the class about the editable sheet.
+*/
 #ifndef EasyTable_H
 #define EasyTable_H
 
@@ -45,7 +49,7 @@ public:
     int getColumnCount()const{return ColumnCount;}
     void getColumnContext(int column,QSet<QString> &strSet,QVector<int> &maxRow);
 
-    QMap<QString,int> tipMap;//key is the text of cell,value is the column of cell
+    QMap<QString,int> tipMap;/// key is the text of cell,value is the column of cell
     void initialTipMap();
     QString getCurrentText();
 signals:
@@ -91,8 +95,8 @@ public slots:
 private slots:
     void somethingChanged();
 private:
-    enum{RECOGNITIONNUMBER = 0x7F51C883};//set the magicnumber of sheet
-    int RowCount,ColumnCount;//decide the range of a sheet
+    enum{RECOGNITIONNUMBER = 0x7F51C883};/// set the magicnumber of sheet
+    int RowCount,ColumnCount;/// decide the range of a sheet
 
     Cell* cell(int row,int column) const;
     QString text(int row,int column) const;
@@ -116,9 +120,9 @@ private:
     void storeCellSize(int row, int column);
     int Width,Height;
     void cellSizeChange(int row, int column, qreal width, qreal height);
-
+	
+/// set the function recognition code
     enum Function{Cancell = 0,Count = 1,Sum = 2,Average = 3};
-    //set the function recognition code
     Function functionCode;
     int count;
     double sum,average;

@@ -1,4 +1,13 @@
-﻿//recommand to use <QtGui>
+﻿/**
+*@class MainWindow
+*the MainWindow contains menubar,toolBar,and statusBar and so on
+*it is controller of almost all the functions
+*/
+/**
+*@file
+*the MainWindow contains menubar,toolBar,and statusBar and so on
+*it is controller of almost all the functions
+*/
 #include <QCheckBox>
 #include <QColorDialog>
 #include <QCloseEvent>
@@ -33,7 +42,10 @@
 #include "gotocelldialog.h"
 #include "mainwindow.h"
 #include "sortdialog.h"
-
+/**
+*the constructor of MainWindow
+*create an empty sheet called "未命名"
+*/
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
 {
@@ -53,7 +65,9 @@ MainWindow::MainWindow(QWidget *parent)
     tipMap = sheet->tipMap;
     setCurrentFile(tr("未命名"));
 }
-
+/**
+*create actions
+*/
 void MainWindow::createActions()
 {
     createFileActions();
@@ -64,9 +78,11 @@ void MainWindow::createActions()
     createOptionActions();
     createOtherActions();
 }
-
+/**
+*create file actions
+*new,open,save,saveAs,print,close,exit,minimize,maximize,normalize
+*/
 void MainWindow::createFileActions()
-//new,open,save,saveAs,print,close,exit,minimize,maximize,normalize
 {
     newAction = new QAction(tr("&新建"),this);
     newAction->setShortcut(QKeySequence::New);
@@ -109,9 +125,11 @@ void MainWindow::createFileActions()
     normalizeAction->setStatusTip(tr("还原"));
     connect(normalizeAction,SIGNAL(triggered()),this,SLOT(showNormal()));
 }
-
+/**
+*create edit actions
+*cut,copy,paste,delete,insert,remove,hide,select
+*/
 void MainWindow::createEditActions()
-//cut,copy,paste,delete,insert,remove,hide,select
 {
     cutAction = new QAction(tr("剪切"),this);
     cutAction->setShortcut(QKeySequence::Cut);
@@ -210,9 +228,11 @@ void MainWindow::createOptionActions()
     hideMainToolBarAction->setShortcut(tr("Alt+h"));
     connect(hideMainToolBarAction,SIGNAL(triggered()),this,SIGNAL(hideToolBar()));
 }
-
+/**
+*create tool actions
+*find,goToCell,function,recalculate,sort,groupBy
+*/
 void MainWindow::createToolActions()
-//find,goToCell,function,recalculate,sort,groupBy
 {
     findAction = new QAction(tr("查找"),this);
     findAction->setStatusTip(tr("查找"));
@@ -244,9 +264,11 @@ void MainWindow::createToolActions()
     hideGroupByAction = new QAction(tr("取消分类汇总"),this);
     connect(hideGroupByAction,SIGNAL(triggered()),this,SLOT(cancellGroupBy()));
 }
-
+/**
+*create formula actions
+*font,color,alignment
+*/
 void MainWindow::createFormulaActions()
-//font,color,alignment
 {
     fontAction = new QAction(tr("字体"),this);
     connect(fontAction,SIGNAL(triggered()),this,SLOT(setFont()));
@@ -277,9 +299,11 @@ void MainWindow::createFormulaActions()
     bottomAlignmentAction = new QAction(tr("基于底线对齐"),this);
     connect(bottomAlignmentAction,SIGNAL(triggered()),this,SLOT(setBottomAlignment()));
 }
-
+/**
+*create other actions
+*about,gridStyle
+*/
 void MainWindow::createOtherActions()
-//about,gridStyle
 {
     aboutAction = new QAction(tr("&关于"),this);
     aboutAction->setStatusTip(tr("关于我们"));
@@ -297,7 +321,9 @@ void MainWindow::createOtherActions()
     connect(dotGridStyleAction,SIGNAL(triggered()),this,SLOT(setDotGrid()));
     connect(dotGridStyleAction,SIGNAL(triggered()),this,SLOT(showGrid()));
 }
-
+/**
+*create recentFileActions according to recentFiles
+*/
 void MainWindow::createRecentFileActions()
 {
     for(int i = 0;i<MaxRecentFiles;i++)
@@ -309,7 +335,9 @@ void MainWindow::createRecentFileActions()
     }
 
 }
-
+/**
+*create SubMenus
+*/
 void MainWindow::createSubMenus()
 {
     removeSubMenu = new QMenu(tr("删除"));
@@ -355,7 +383,9 @@ void MainWindow::createSubMenus()
         recentFilesSubMenu->addAction(recentFileActions[i]);
     }
 }
-
+/**
+*create Menus
+*/
 void MainWindow::createMenus()
 {
     menuBar()->adjustSize();
@@ -424,7 +454,9 @@ void MainWindow::createMenus()
     helpMenu->setCursor(QCursor(Qt::PointingHandCursor));
     helpMenu->addAction(aboutAction);
 }
-
+/**
+*createContextMenu
+*/
 void MainWindow::createContextMenu()
 {
     sheet->addAction(cutAction);
@@ -441,7 +473,9 @@ void MainWindow::createContextMenu()
     sheet->addAction(hideSubMenu->menuAction());
     sheet->setContextMenuPolicy(Qt::ActionsContextMenu);
 }
-
+/**
+*createToolBars
+*/
 void MainWindow::createToolBars()
 {
     fileToolBar = addToolBar(tr("文件"));
@@ -492,7 +526,9 @@ void MainWindow::createToolBars()
     alignmentToolBar->addAction(bottomAlignmentAction);
     alignmentToolBar->addSeparator();
 }
-
+/**
+*createGroupByToolBar
+*/
 void MainWindow::createGroupByToolBar()
 {
     groupByAction->setEnabled(false);
@@ -524,7 +560,9 @@ void MainWindow::createGroupByToolBar()
     }
     hideGroupByAction->setVisible(true);
 }
-
+/**
+*createGroupByToolBarView
+*/
 void MainWindow::createGroupByToolBarView()
 {
     insertToolBarBreak(groupByToolBar);
@@ -533,7 +571,9 @@ void MainWindow::createGroupByToolBarView()
     groupByToolBar->setMovable(false);
     groupByToolBar->setFloatable(false);
 }
-
+/**
+*createStatusBar
+*/
 void MainWindow::createStatusBar()
 {
     locationLabel = new QLabel("Z999");
@@ -551,26 +591,34 @@ void MainWindow::createStatusBar()
     connect(sheet,SIGNAL(modified()),this,SLOT(sheetModified()));
     updateStatusBar();
 }
-
+/**
+*updateStatusBar
+*/
 void MainWindow::updateStatusBar()
 {
     locationLabel->setText(sheet->currentLocation());
     formulaLabel->setText(sheet->currentFormula());
 }
-
+/**
+*if sheet has been changed , set MainWindow modified
+*/
 void MainWindow::sheetModified()
 {
     setWindowModified(true);
     updateStatusBar();
 }
-
+/**
+*allow autoSave
+*/
 void MainWindow::setAutoSave(bool ok)
 {
     autoSave = ok;
     if(autoSave)
         saveAfterTimeInterval();
 }
-
+/**
+*save file after a fixed interval
+*/
 void MainWindow::saveAfterTimeInterval()
 {
     if(autoSave)
@@ -592,7 +640,9 @@ void MainWindow::saveAfterTimeInterval()
         timer = nullptr;
     }
 }
-
+/**
+*new file
+*/
 void MainWindow::newFile()
 {
     if(okToContinue())
@@ -602,7 +652,9 @@ void MainWindow::newFile()
         return;
     }
 }
-
+/**
+*when leaving the file,make sure whether the user wants to save the file
+*/
 bool MainWindow::okToContinue()
 {
     if(isWindowModified())
@@ -626,7 +678,9 @@ bool MainWindow::okToContinue()
     }
     return true;
 }
-
+/**
+*open file
+*/
 void MainWindow::open()
 {
     if(okToContinue())
@@ -639,7 +693,9 @@ void MainWindow::open()
             loadFile(fileName);
     }
 }
-
+/**
+*load file when open is need
+*/
 bool MainWindow::loadFile(const QString &fileName)
 {
     if(!sheet->readFile(fileName))
@@ -653,7 +709,9 @@ bool MainWindow::loadFile(const QString &fileName)
     statusBar()->showMessage(str,2000);
     return true;
 }
-
+/**
+*save
+*/
 bool MainWindow::save()
 {
     if(curFile.isEmpty() || curFile == tr("未命名"))
@@ -665,7 +723,9 @@ bool MainWindow::save()
         return saveFile(curFile);
     }
 }
-
+/**
+*save file as fileName
+*/
 bool MainWindow::saveFile(const QString &fileName)
 {
     if(!sheet->writeFile(fileName))
@@ -678,7 +738,9 @@ bool MainWindow::saveFile(const QString &fileName)
     setWindowModified(false);
     return true;
 }
-
+/**
+*save file with a specified fileName
+*/
 bool MainWindow::saveAs()
 {
     QString fileName = QFileDialog::getSaveFileName(
@@ -692,7 +754,9 @@ bool MainWindow::saveAs()
     }
     return saveFile(fileName);
 }
-
+/**
+*print
+*/
 void MainWindow::print()
 {
     QPrinter printer;
@@ -703,7 +767,9 @@ void MainWindow::print()
         text->print(&printer);
     }
 }
-
+/**
+*when close action happens,call it
+*/
 void MainWindow::closeEvent(QCloseEvent *event)
 {
     if(okToContinue())
@@ -717,7 +783,9 @@ void MainWindow::closeEvent(QCloseEvent *event)
         emit closeCancelled();
     }
 }
-
+/**
+*close window
+*/
 void MainWindow::closeWindow()
 {
     close();
@@ -725,9 +793,11 @@ void MainWindow::closeWindow()
         emit closeSubWindow();
     //avoid the SubWindow checks whether the window has been modified.
 }
-
+/**
+*use click left button of mouse to show the toolBar in MainWidget
+*in some special area
+*/
 void MainWindow::mousePressEvent(QMouseEvent *event)
-//use click left button of mouse to show the toolBar in MainWidget
 {
     if(event->y() <= 60)
     {
@@ -743,7 +813,9 @@ void MainWindow::mousePressEvent(QMouseEvent *event)
         }
     }
 }
-
+/**
+*set the file as the current editing file
+*/
 void MainWindow::setCurrentFile(const QString &fileName)
 {
     curFile = fileName;
@@ -768,13 +840,16 @@ void MainWindow::setCurrentFile(const QString &fileName)
     }
     setWindowTitle(tr("%1[*]-%2").arg(shownName).arg(tr("sheet")));
 }
-
+/**
+*strip fileName from its whole name
+*/
 QString MainWindow::strippedName(const QString &fullFileName)
-//strip the fileName from path
 {
     return QFileInfo(fullFileName).fileName();
 }
-
+/**
+*refresh recent files and related actions
+*/
 void MainWindow::refreshRecentFileActions()
 {
     QMutableStringListIterator i(recentFiles);
@@ -800,7 +875,9 @@ void MainWindow::refreshRecentFileActions()
     }
     separatorAction->setVisible(!recentFiles.isEmpty());
 }
-
+/**
+*open recent file
+*/
 void MainWindow::openRecentFile()
 {
     if(okToContinue())
@@ -811,12 +888,16 @@ void MainWindow::openRecentFile()
             loadFile(action->data().toString());
     }
 }
-
+/**
+*close all window (when you click the 'exit' in the file menu)
+*/
 void MainWindow::closeAllWindow()
 {
     emit exitApplication();
 }
-
+/**
+*use findDialog
+*/
 void MainWindow::find()
 {
     if(!findDialog)
@@ -850,7 +931,9 @@ void MainWindow::find()
     findDialog->raise();
     findDialog->activateWindow();
 }
-
+/**
+*use gotocelldialog
+*/
 void MainWindow::goToCell()
 {
     GotoCellDialog *dialog = new GotoCellDialog(this);
@@ -866,7 +949,9 @@ void MainWindow::goToCell()
     }
     delete dialog;
 }
-
+/**
+*use SortDialog
+*/
 void MainWindow::sort()
 {
     SortDialog dialog(this);
@@ -905,37 +990,55 @@ void MainWindow::sort()
         }
     }
 }
-
+/**
+*show sheet`s grid
+*associated with the namesake method of EasyTable
+*/
 void MainWindow::showGrid()
 {
     sheet->setShowGrid(true);
     showGridAction->setChecked(true);
 }
-
+/**
+*hide sheet`s grid
+*associated with the namesake method of EasyTable
+*/
 void MainWindow::hideGrid()
 {
     sheet->setShowGrid(false);
     showGridAction->setChecked(false);
 }
-
+/**
+*set gridStyle to dash
+*by calling the setGrid() of EasyTable
+*/
 void MainWindow::setDashGrid()
 {
     Qt::PenStyle style = Qt::DashLine;
     sheet->setGrid(style);
 }
-
+/**
+*set gridStyle to dot
+*by calling the setGrid() of EasyTable
+*/
 void MainWindow::setDotGrid()
 {
     Qt::PenStyle style = Qt::DotLine;
     sheet->setGrid(style);
 }
-
+/**
+*set gridStyle to solid
+*by calling the setGrid() of EasyTable
+*/
 void MainWindow::setSolidGrid()
 {
     Qt::PenStyle style = Qt::SolidLine;
     sheet->setGrid(style);
 }
-
+/**
+*set font of cell
+*by calling the setFont() of EasyTable
+*/
 void MainWindow::setFont()
 {
     bool ok;
@@ -950,39 +1053,57 @@ void MainWindow::setFont()
        sheet->setFont(font);
     }
 }
-
+/**
+*set left aligned
+*by calling the setAlignment() of EasyTable
+*/
 void MainWindow::setLeftAlignment()
 {
     int alignmentCode = Qt::AlignLeft | Qt::AlignVCenter;
     //if not indicated, the alignment type should be center in vertical
     sheet->setAlignment(alignmentCode);
 }
-
+/**
+*set center aligned
+*by calling the setAlignment() of EasyTable
+*/
 void MainWindow::setCenterAlignment()
 {
     int alignmentCode = Qt::AlignCenter;
     sheet->setAlignment(alignmentCode);
 }
-
+/**
+*set right aligned
+*by calling the setAlignment() of EasyTable
+*/
 void MainWindow::setRightAlignment()
 {
     int alignmentCode = Qt::AlignRight | Qt::AlignVCenter;
     sheet->setAlignment(alignmentCode);
 }
-
+/**
+*set top aligned
+*by calling the setAlignment() of EasyTable
+*/
 void MainWindow::setTopAlignment()
 {
     int alignmentCode = Qt::AlignTop | Qt::AlignHCenter;
     //if not indicated, the alignment type should be center in horizon
     sheet->setAlignment(alignmentCode);
 }
-
+/**
+*set bottom aligned
+*by calling the setAlignment() of EasyTable
+*/
 void MainWindow::setBottomAlignment()
 {
     int alignmentCode = Qt::AlignBottom | Qt::AlignHCenter;
     sheet->setAlignment(alignmentCode);
 }
-
+/**
+*set the color and shape of icon
+*for the icons in formatToolBar
+*/
 QIcon& MainWindow::setIconColor(QIcon &icon,QColor color)
 {
     QSize suitableSize(70,50);//The size is suitable for toolbar
@@ -991,7 +1112,10 @@ QIcon& MainWindow::setIconColor(QIcon &icon,QColor color)
     icon.addPixmap(pixmapColor);
     return icon;
 }
-
+/**
+*set the text color
+*associated with the namesake method of EasyTable
+*/
 void MainWindow::setTextColor()
 {
     QColor curColor;
@@ -1013,7 +1137,10 @@ void MainWindow::setTextColor()
         sheet->setTextColor(textColor);
     }
 }
-
+/**
+*set the background color
+*associated with the namesake method of EasyTable
+*/
 void MainWindow::setBackgroundColor()
 {
     QColor curColor;
@@ -1035,7 +1162,9 @@ void MainWindow::setBackgroundColor()
         setWindowModified(false);
     }
 }
-
+/**
+*hide rows do not contain particular contexts
+*/
 void MainWindow::hideSpecificRow()
 {
     QAction *action = qobject_cast<QAction *>(sender());
@@ -1057,7 +1186,9 @@ void MainWindow::hideSpecificRow()
         sheet->hideRowUnlike(column,strList[0],range);
     }
 }
-
+/**
+*cancell groupBy feature
+*/
 void MainWindow::cancellGroupBy()
 {
     sheet->showHiddenRanges();
@@ -1066,7 +1197,9 @@ void MainWindow::cancellGroupBy()
     hideGroupByAction->setVisible(false);
     maxRow.clear();
 }
-
+/**
+*show the version of software
+*/
 void MainWindow::about()
 {
     QMessageBox::about(this,tr("About EasyTable"),
@@ -1074,7 +1207,12 @@ void MainWindow::about()
            "<br/>"
         "<em>Copyleft &copy; BugMore Software Inc.</em>"));
 }
-
+/**
+*write settings
+*contain
+*geometry,recentFiles,showGrid,defaultAlignment
+*autoRecalc,autoResize,autoSave
+*/
 void MainWindow::writeSettings()
 {
     QSettings settings("BugMore Software Inc.","EasyTable");
@@ -1086,7 +1224,12 @@ void MainWindow::writeSettings()
     settings.setValue("autoResize",autoResizeAction->isChecked());
     settings.setValue("autoSave",autoSaveAction->isChecked());
 }
-
+/**
+*read settings
+*contain
+*geometry,recentFiles,showGrid,defaultAlignment
+*autoRecalc,autoResize,autoSave
+*/
 void MainWindow::readSettings()
 {
     QSettings settings("BugMore Software Inc.","EasyTable");
@@ -1105,7 +1248,9 @@ void MainWindow::readSettings()
     bool autoSave = settings.value("autoSave",false).toBool();
     autoSaveAction->setChecked(autoSave);
 }
-
+/**
+*create smart tips
+*/
 void MainWindow::createTipToolBar(bool ok)
 {
     sheet->setAutoTip(ok);
@@ -1132,7 +1277,9 @@ void MainWindow::createTipToolBar(bool ok)
         disconnect(sheet,SIGNAL(currentCellChanged(int,int,int,int)),this,SLOT(refreshTipTool()));
     }
 }
-
+/**
+*define the view of tipToolBar
+*/
 void MainWindow::createTipToolBarView()
 {
     tipToolBar->setToolTip(tr("使用Alt + 数字 进行补全"));
@@ -1146,7 +1293,9 @@ void MainWindow::createTipToolBarView()
     tipToolBar->addSeparator();
     tipToolBar->setPalette(QPalette(Qt::green));
 }
-
+/**
+*
+*/
 void MainWindow::refreshTipTool()
 {
     //if tipToolBar is not existed in the UI
@@ -1171,7 +1320,9 @@ void MainWindow::refreshTipTool()
         }//end for cell is not empty
     }//end for the tipToolBar is visible
 }
-
+/**
+*clear the actions in tipToolBar
+*/
 void MainWindow::destroyTipToolBarActions()
 //delete all the actions in tipToolBar
 {
@@ -1200,12 +1351,14 @@ void MainWindow::destroyTipToolBarActions()
   *  And it is not useful to create too much items since you will be unable
   *  find your target in a look.
   */
-
+/**
+*create tips in particular situation
+*/
 void MainWindow::createTipToolBarActions()
 //show the 10 items in the beginning of tipMap
 {
-	if(sheet->getTipDirty() == true)
-		tipMap = sheet->tipMap;
+    if(sheet->getTipDirty() == true)
+        tipMap = sheet->tipMap;
     int count = tipMap.count();
     QMap<QString,int>::iterator it = tipMap.end() - 1;
     destroyTipToolBarActions();
@@ -1222,12 +1375,14 @@ void MainWindow::createTipToolBarActions()
         --it;
     }
 }
-
+/**
+*create tips in particular situation
+*/
 void MainWindow::createTipToolBarActions(int column)
 //show the 10 items which is in the particular column
 {
      if(sheet->getTipDirty() == true)
-		tipMap = sheet->tipMap;
+        tipMap = sheet->tipMap;
      destroyTipToolBarActions();
      QList<QString> strList = tipMap.keys(column);
      QList<QString>::iterator it = strList.begin();
@@ -1250,11 +1405,13 @@ void MainWindow::createTipToolBarActions(int column)
          ++it;
      }
 }
-
+/**
+*create tips in particular situation
+*/
 void MainWindow::createTipToolBarActions(int column, QString str)
 {
     if(sheet->getTipDirty() == true)
-		tipMap = sheet->tipMap;
+        tipMap = sheet->tipMap;
     destroyTipToolBarActions();
     QSet<QString> tipSet;
     QList<QString> listStr = tipMap.keys(column);
@@ -1280,7 +1437,10 @@ void MainWindow::createTipToolBarActions(int column, QString str)
         ++it;
     }//end for create actions
 }
-
+/**
+*fill in selected cell with particular text
+*called by tipToolBar`s actions
+*/
 void MainWindow::finishCell()
 {
     QAction *action = qobject_cast<QAction *>(sender());

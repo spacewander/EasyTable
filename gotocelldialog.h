@@ -1,3 +1,7 @@
+/**
+*@file
+*use this dialog for going to special cell
+*/
 #ifndef GOTOCELLDIALOG_H
 #define GOTOCELLDIALOG_H
 

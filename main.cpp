@@ -1,9 +1,16 @@
+/**
+*@file
+*EasyTable 's main() is here
+*/
+
 //Qt 4.8.4
-//coded by spacewander,welcome to reuse if you want
 #include "mainwidget.h"
 #include <QApplication>
 #include <QTextCodec>
 
+/**
+*I bet you know what is main function
+*/
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);

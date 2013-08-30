@@ -1,7 +1,15 @@
-﻿#include "easytable.h"
+﻿/**
+*@class EasyTable
+*EasyTable is the class about the editable sheet.
+*/
+/**
+*@file
+*EasyTable is the class about the editable sheet.
+*/
+#include "easytable.h"
 #include "easytablecompare.h"
 #include "cell.h"
-//recommand to use <QtGui>
+
 #include <QApplication>
 #include <QClipboard>
 #include <QDataStream>
@@ -15,7 +23,9 @@
 #include <QTableWidget>
 #include <QTextDocument>
 #include <QTextStream>
-
+/**
+*the constructor of EasyTable
+*/
 EasyTable::EasyTable(QWidget *parent) :
     QTableWidget(parent)
 {
@@ -34,7 +44,9 @@ EasyTable::EasyTable(QWidget *parent) :
     //otherwise the size of Cell will be changed unexpectedly
     connectSignalsAndSlots();
 }
-
+/**
+*connect singals and slots when new file is loaded
+*/
 void EasyTable::connectSignalsAndSlots()
 {
     connect(this,SIGNAL(itemChanged(QTableWidgetItem*)),
@@ -44,7 +56,9 @@ void EasyTable::connectSignalsAndSlots()
     connect(this,SIGNAL(cellChanged(int,int)),
             this,SLOT(addTipMapItem(int,int)));
 }
-
+/**
+*set the value of header to A-Z
+*/
 void EasyTable::setHeaderItem()
 {
     for(int i = 0;i<ColumnCount;i++)
@@ -54,13 +68,18 @@ void EasyTable::setHeaderItem()
         setHorizontalHeaderItem(i,item);
     }
 }
-
+/**
+*store the cell size when new file is loaded
+*so that the program can know the default size of cell
+*/
 void EasyTable::storeCellSize(int row,int column)
 {
     Width = columnWidth(column);
     Height = rowHeight(row);
 }
-
+/**
+*clear all cells and reset the headers and do many other things XD
+*/
 void EasyTable::clear()
 {
     setRowCount(0);
@@ -93,12 +112,18 @@ void EasyTable::clear()
     setHeaderItem();
     setCurrentCell(0,0);
 }
-
+/**
+*create cell
+*/
 Cell* EasyTable::cell(int row, int column) const
 {
     return static_cast<Cell*>(item(row,column));
 }
-
+/**
+*create a Cell to a Cell* pointer named c
+*if c is not NULL,return the string type of its data
+*ignoring the result of its formula
+*/
 QString EasyTable::text(int row, int column) const
 {
     Cell *c = cell(row,column);
@@ -113,7 +138,11 @@ QString EasyTable::text(int row, int column) const
         return "";
     }
 }
-
+/**
+*create a Cell to a Cell* pointer named c
+*if c is not NULL,return the string type of its data
+*considering the result of its formula
+*/
 QString EasyTable::formula(int row, int column) const
 {
     Cell *c = cell(row,column);
@@ -128,7 +157,9 @@ QString EasyTable::formula(int row, int column) const
         return "";
     }
 }
-
+/**
+*set a formula to a particular cell
+*/
 void EasyTable::setFormula(int row, int column, const QString &formula)
 {
     Cell *c = cell(row,column);
@@ -139,25 +170,33 @@ void EasyTable::setFormula(int row, int column, const QString &formula)
     }
     c->setFormula(formula);
 }
-
+/**
+*return current location in formula like 'A32'
+*/
 QString EasyTable::currentLocation()const
 {
     return QChar('A'+currentColumn())
             +QString::number(currentRow()+1);
 }
-
+/**
+*return value of current Cell
+*/
 QString EasyTable::currentFormula()const
 {
     return formula(currentRow(),currentColumn());
 }
-
+/**
+*report if something is changed
+*/
 void EasyTable::somethingChanged()
 {
     if(autoRecalc)
         recalculate();
     emit modified();
 }
-
+/**
+*write file back to hard disk
+*/
 bool EasyTable::writeFile(const QString &fileName)
 {
     QStringList fileInfo = fileName.split('.');
@@ -210,8 +249,10 @@ bool EasyTable::writeFile(const QString &fileName)
                          .arg(fileName));
     return false;
 }
-
-bool EasyTable::saveFileAsTxt(const QString &fileName)//not completed
+/**
+*save as .txt file
+*/
+bool EasyTable::saveFileAsTxt(const QString &fileName)
 {
     QFile file(fileName);
     if(!file.open(QIODevice::WriteOnly))
@@ -267,7 +308,9 @@ bool EasyTable::saveFileAsTxt(const QString &fileName)//not completed
     QApplication::restoreOverrideCursor();
     return true;
 }
-
+/**
+*save as .et file 
+*/
 bool EasyTable::saveFileAsEt(const QString &fileName)
 {
     QFile file(fileName);
@@ -298,8 +341,10 @@ bool EasyTable::saveFileAsEt(const QString &fileName)
     QApplication::restoreOverrideCursor();
     return true;
 }
-
-bool EasyTable::saveFileAsCsv(const QString &fileName)//not completed
+/**
+*save as .csv file
+*/
+bool EasyTable::saveFileAsCsv(const QString &fileName)
 {
     QFile file(fileName);
     if(!file.open(QIODevice::WriteOnly))
@@ -329,12 +374,13 @@ bool EasyTable::saveFileAsCsv(const QString &fileName)//not completed
             break;
         }
     }
-    QMessageBox::warning(this,"e",text);
     out<<text;
     QApplication::restoreOverrideCursor();
     return true;
 }
-
+/**
+*read file into sheet
+*/
 bool EasyTable::readFile(const QString &fileName)
 {
     QFile file(fileName);
@@ -377,7 +423,9 @@ bool EasyTable::readFile(const QString &fileName)
     QApplication::restoreOverrideCursor();
     return true;
 }
-
+/**
+*prepare file context for printing
+*/
 QTextDocument *EasyTable::getContextForPrint()
 {
     QString str;
@@ -395,7 +443,9 @@ QTextDocument *EasyTable::getContextForPrint()
     context = new QTextDocument(str,this);
     return context;
 }
-
+/**
+*select ranges
+*/
 QTableWidgetSelectionRange EasyTable::selectedRange()const
 {
     QList<QTableWidgetSelectionRange> ranges = selectedRanges();
@@ -403,7 +453,9 @@ QTableWidgetSelectionRange EasyTable::selectedRange()const
         return QTableWidgetSelectionRange();
     return ranges.first();
 }
-
+/**
+*resize cell
+*/
 void EasyTable::resizeCell(QTableWidgetItem *item)
 {
     int column = item->column();
@@ -428,13 +480,17 @@ void EasyTable::resizeCell(QTableWidgetItem *item)
     }
     cellSizeChange(row,column,width,height);
 }
-
+/**
+*cut text
+*/
 void EasyTable::cut()
 {
     copy();
     del();
 }
-
+/**
+*copy text
+*/
 void EasyTable::copy()
 {
     QTableWidgetSelectionRange range = selectedRange();
@@ -452,7 +508,9 @@ void EasyTable::copy()
     }//end for row
     QApplication::clipboard()->setText(str);
 }
-
+/**
+*paste text
+*/
 void EasyTable::paste()
 {
     QTableWidgetSelectionRange range = selectedRange();
@@ -484,7 +542,9 @@ void EasyTable::paste()
     }//end for row
     somethingChanged();
 }
-
+/**
+*delete text
+*/
 void EasyTable::del()
 {
     QList<QTableWidgetItem *> items = selectedItems();
@@ -495,7 +555,9 @@ void EasyTable::del()
         somethingChanged();
     }
 }
-
+/**
+*insert row
+*/
 void EasyTable::rowInsert()
 {
     insertRow(currentRow());
@@ -510,7 +572,9 @@ void EasyTable::rowInsert()
             c->setDefaultAlignment(defaultAlignment);
     }
 }
-
+/**
+*insert column
+*/
 void EasyTable::columnInsert()
 {
     if(ColumnCount >= 26)
@@ -533,20 +597,26 @@ void EasyTable::columnInsert()
             c->setDefaultAlignment(defaultAlignment);
     }
 }
-
+/**
+*remove row
+*/
 void EasyTable::rowRemove()
 {
     removeRow(currentRow());
     RowCount--;
 }
-
+/**
+*remove column
+*/
 void EasyTable::columnRemove()
 {
     removeColumn(currentColumn());
     ColumnCount--;
     setHeaderItem();
 }
-
+/**
+*hide row
+*/
 void EasyTable::rowHide()
 {
     QTableWidgetSelectionRange range = selectedRange();
@@ -555,7 +625,9 @@ void EasyTable::rowHide()
     for(int i = 0;i<rows;i++)
         hideRow(i+firstRow);
 }
-
+/**
+*hide column
+*/
 void EasyTable::columnHide()
 {
     QTableWidgetSelectionRange range = selectedRange();
@@ -564,7 +636,9 @@ void EasyTable::columnHide()
     for(int i = 0;i<columns;i++)
         hideColumn(i+firstColumn);
 }
-
+/**
+*show all hidden area
+*/
 void EasyTable::showHiddenRanges()
 {
     for(int i = 0;i<RowCount;i++)
@@ -572,18 +646,29 @@ void EasyTable::showHiddenRanges()
         if(isRowHidden(i))
             showRow(i);
     }
+    for(int i = 0;i<ColumnCount;i++)
+    {
+        if(isColumnHidden(i))
+            showColumn(i);
+    }
 }
-
+/**
+*select current row
+*/
 void EasyTable::selectCurrentRow()
 {
     selectRow(currentRow());
 }
-
+/**
+*select current column
+*/
 void EasyTable::selectCurrentColumn()
 {
     selectColumn(currentColumn());
 }
-
+/**
+*use functions to handle the data
+*/
 void EasyTable::useFunction()
 {
     functionCode = getFunctionCode();
@@ -605,7 +690,9 @@ void EasyTable::useFunction()
     }
     displayResults();
 }
-
+/**
+*get function recognition code
+*/
 EasyTable::Function EasyTable::getFunctionCode()
 {
     QStringList functionItemList;
@@ -625,7 +712,10 @@ EasyTable::Function EasyTable::getFunctionCode()
     }
     return Cancell;
 }
-
+/**
+*count how many cells
+*ignoring empty cells
+*/
 void EasyTable::functionCount()
 {
     count = 0;
@@ -640,7 +730,10 @@ void EasyTable::functionCount()
         }//end for column
     }//end for row
 }
-
+/**
+*sum the value of cells
+*ignoring cells contain non-numeric value
+*/
 void EasyTable::functionSum()
 {
     sum = 0;
@@ -661,7 +754,10 @@ void EasyTable::functionSum()
         }//end for column
     }//end for row
 }
-
+/**
+*return the average of value of cells
+*ignoring cells contain non-numeric value
+*/
 void EasyTable::functionAverage()
 {
     sum = 0,count = 0;
@@ -689,7 +785,9 @@ void EasyTable::functionAverage()
     else
         average = 0;
 }
-
+/**
+*display the results of functions
+*/
 void EasyTable::displayResults()
 {
     switch(functionCode)
@@ -713,7 +811,9 @@ void EasyTable::displayResults()
         break;
     }
 }
-
+/**
+*find from the begin of file to the end of file
+*/
 void EasyTable::findInAll(const QString &str, Qt::CaseSensitivity cs)
 {
     int row = 0;
@@ -738,7 +838,9 @@ void EasyTable::findInAll(const QString &str, Qt::CaseSensitivity cs)
     QMessageBox::information(this,tr("查找"),tr("查找结束,没有找到"
                                               "<pre>     %1 </pre>").arg(str));
 }
-
+/**
+*find from here and search the whole file
+*/
 void EasyTable::findFromHere(const QString &str, Qt::CaseSensitivity cs)
 {
     int row = currentRow();
@@ -782,7 +884,9 @@ void EasyTable::findFromHere(const QString &str, Qt::CaseSensitivity cs)
     QMessageBox::information(this,tr("查找"),tr("查找结束,没有找到"
                                               "<pre>    %1 </pre>").arg(str));
 }
-
+/**
+*find forward
+*/
 void EasyTable::findNext(const QString &str, Qt::CaseSensitivity cs)
 {
     int row = currentRow();
@@ -808,7 +912,9 @@ void EasyTable::findNext(const QString &str, Qt::CaseSensitivity cs)
                                               "<pre>    %1 </pre>"
                                               "如需继续查找,请使用向前查找").arg(str));
 }
-
+/**
+*find backward
+*/
 void EasyTable::findPrevious(const QString &str, Qt::CaseSensitivity cs)
 {
     int row = currentRow();
@@ -834,12 +940,16 @@ void EasyTable::findPrevious(const QString &str, Qt::CaseSensitivity cs)
                                               "<pre>    %1 </pre>"
                                               "如需继续查找,请使用向后查找").arg(str));
 }
-
+/**
+*replace the context of the cell found
+*/
 void EasyTable::replaceSelectedCell(const QString &str)
 {
     finish(str);
 }
-
+/**
+*recalculate all formula
+*/
 void EasyTable::recalculate()
 {
     for(int column = 0;column<ColumnCount;column++)
@@ -852,14 +962,18 @@ void EasyTable::recalculate()
     }//end for
     viewport()->update();
 }
-
+/**
+*set autoRecalc (true by default)
+*/
 void EasyTable::setAutoRecalculate(bool recalc)
 {
     autoRecalc = recalc;
     if(autoRecalc)
         recalculate();
 }
-
+/**
+*set autoResize (true by default)
+*/
 void EasyTable::setAutoResize(bool resize)
 {
     autoResize = resize;
@@ -867,7 +981,9 @@ void EasyTable::setAutoResize(bool resize)
         disconnect(this,SIGNAL(itemChanged(QTableWidgetItem*)),
                    this,SLOT(resizeCell(QTableWidgetItem*)));
 }
-
+/**
+*set default alignment is used or not (true by default)
+*/
 void EasyTable::setDefaultAlignment(bool ok)
 {
     defaultAlignment = ok;
@@ -898,7 +1014,9 @@ void EasyTable::setDefaultAlignment(bool ok)
     }//end else
     QApplication::restoreOverrideCursor();
 }
-
+/**
+*sort
+*/
 void EasyTable::sort(const EasyTableCompare &compare, bool defaultChoose)
 {
     QTableWidgetSelectionRange range;
@@ -919,9 +1037,10 @@ void EasyTable::sort(const EasyTableCompare &compare, bool defaultChoose)
     }
     clearSelection();
 }
-
+/**
+*sort with the whole sheet as range
+*/
 void EasyTable::columnSort(const EasyTableCompare &compare, const QTableWidgetSelectionRange &range)
-//the range is the whole sheet
 {
     QList<QStringList> rows;
     int i;
@@ -942,7 +1061,9 @@ void EasyTable::columnSort(const EasyTableCompare &compare, const QTableWidgetSe
     }
     setCurrentCell(0,0);
 }
-
+/**
+*sort with selected part as range
+*/
 void EasyTable::defaultSort(const EasyTableCompare &compare, const QTableWidgetSelectionRange &range)
 {
     QList<QStringList> rows;
@@ -961,9 +1082,7 @@ void EasyTable::defaultSort(const EasyTableCompare &compare, const QTableWidgetS
             if(compare.keys[i] > range.columnCount())
                 ( (EasyTableCompare &)compare).keys[i] =  range.columnCount() - 1;
     }
-    QMessageBox::information(this,"here",QString('A' + compare.keys[0]));
     qStableSort(rows.begin(),rows.end(),compare);
-    QMessageBox::information(this,"here","b");
     for(i = 0;i<range.rowCount();i++)
     {
         for(int j = 0;j<range.columnCount();j++)
@@ -972,7 +1091,9 @@ void EasyTable::defaultSort(const EasyTableCompare &compare, const QTableWidgetS
     }
 }
 
-
+/**
+*set font
+*/
 void EasyTable::setFont(const QFont &font)
 {
     QTableWidgetSelectionRange range = selectedRange();
@@ -986,9 +1107,10 @@ void EasyTable::setFont(const QFont &font)
         }//end for column
     }//end for row
 }
-
+/**
+*set alignment
+*/
 void EasyTable::setAlignment(int alignment)
-//the alignment is from Qt::Align...
 {
     QTableWidgetSelectionRange range = selectedRange();
     for(int i = 0;i<range.rowCount();i++)
@@ -1004,7 +1126,9 @@ void EasyTable::setAlignment(int alignment)
         }//end for column
     }//end for row
 }
-
+/**
+*set text color
+*/
 void EasyTable::setTextColor(QColor &textColor)
 {
     QTableWidgetSelectionRange range = selectedRange();
@@ -1018,7 +1142,9 @@ void EasyTable::setTextColor(QColor &textColor)
         }//end for column
     }//end for row
 }
-
+/**
+*set background color
+*/
 void EasyTable::setBackgroundColor(QColor &backgroundColor)
 {
     QTableWidgetSelectionRange range = selectedRange();
@@ -1032,12 +1158,16 @@ void EasyTable::setBackgroundColor(QColor &backgroundColor)
         }//end for column
     }//end for row
 }
-
+/**
+*set gridStyle
+*/
 void EasyTable::setGrid(Qt::PenStyle &gridStyle)
 {
     setGridStyle(gridStyle);
 }
-
+/**
+*change the size of cell if need
+*/
 void EasyTable::cellSizeChange(int row, int column,qreal width,qreal height)
 {
      if(width > Width)
@@ -1077,7 +1207,10 @@ void EasyTable::cellSizeChange(int row, int column,qreal width,qreal height)
         }//end if
     }//end else
 }
-
+/**
+*get the context of particular column 
+*and record the max number of rows in particular column
+*/
 void EasyTable::getColumnContext(int column, QSet<QString> &strSet, QVector<int> &maxRow)
 {
     int row = 0;
@@ -1092,9 +1225,10 @@ void EasyTable::getColumnContext(int column, QSet<QString> &strSet, QVector<int>
     }//end for
     maxRow.append(row);
 }
-
+/**
+*hide the unlike rows.range is the max unempty row in the whole sheet
+*/
 void EasyTable::hideRowUnlike(int column, QString str, int range)
-//hide the unlike rows.range is the max unempty row in the whole sheet
 {
     QString info;
     for(int i = 0; i <= range; i++)
@@ -1108,10 +1242,13 @@ void EasyTable::hideRowUnlike(int column, QString str, int range)
         }//end if
     }//end for
 }
-
-//In two situation we will call the method below:
-//1.in the constructor of EasyTable
-//2.when tipMenu is created and tipSet is empty
+/**
+*initial TipMap with string value of all cells
+*In two situation we will call the method below:
+*1.in the constructor of EasyTable
+*2.when tipMenu is created and tipSet is empty
+*and this function does not change the value of cells
+*/
 void EasyTable::initialTipMap()
 {
     QString str;
@@ -1135,7 +1272,9 @@ void EasyTable::initialTipMap()
         setTipDirty(false);
     }//end if
 }
-
+/**
+*add new item to TipMap
+*/
 void EasyTable::addTipMapItem(int row, int column)
 {
     Cell *c = cell(row,column);
@@ -1150,7 +1289,9 @@ void EasyTable::addTipMapItem(int row, int column)
         }//end if !Empty
     }//end if !nullptr
 }
-
+/**
+*get current text of current cell
+*/
 QString EasyTable::getCurrentText()
 {
     QTableWidgetItem *item = currentItem();
@@ -1159,7 +1300,9 @@ QString EasyTable::getCurrentText()
     else
         return "";
 }
-
+/**
+*fill in cell with particular string
+*/
 void EasyTable::finish(const QString &str)
 {
     int row = currentRow();

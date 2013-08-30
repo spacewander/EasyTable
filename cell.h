@@ -1,3 +1,7 @@
+/**
+*@file
+*a special tableWidgetItem for EasyTable
+*/
 #ifndef CELL_H
 #define CELL_H
 
@@ -19,6 +23,7 @@ public:
 
     void setDefaultAlignment(bool ok = false);
 private:
+	/// store the value of Cell
     QVariant value() const;
 
     QVariant evalExpression(const QString& str,int& pos) const;
@@ -26,7 +31,9 @@ private:
     QVariant evalFactor(const QString& str,int& pos) const;
 
     mutable QVariant cachedValue;
+	/// show whether the value of Cell has been changed
     mutable bool cacheIsDirty;
+	/// store whether defaultAlignment is used
     bool defaultAlignment;
 signals:
 
