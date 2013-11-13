@@ -34,7 +34,7 @@ public slots:
     void openNewMainWindow();
     void closeAllWindow();
     void closeSubWindow();
-    void setCloseCancelled();
+    void closeCancelled();
 
     void showToolBar();
     void hideToolBar();

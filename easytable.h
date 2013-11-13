@@ -92,8 +92,10 @@ public slots:
 
     void addTipMapItem(int row,int column);
     void finish(const QString &str);
+
 private slots:
     void somethingChanged();
+
 private:
     enum{RECOGNITIONNUMBER = 0x7F51C883};/// set the magicnumber of sheet
     int RowCount,ColumnCount;/// decide the range of a sheet
@@ -128,6 +130,8 @@ private:
     double sum,average;
     Function getFunctionCode();
     void displayResults();
+
+    bool _find(int row,int column,const QString &str, Qt::CaseSensitivity cs);
 
     void functionCount();
     void functionSum();

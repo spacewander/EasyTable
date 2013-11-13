@@ -42,6 +42,17 @@
 #include "gotocelldialog.h"
 #include "mainwindow.h"
 #include "sortdialog.h"
+
+//to use macro above just want to show another way to implement a new action
+//But I think macro is not recomendable to use here
+#define createAction(action,actionName,shortcut,statusTip,signal,slot) \
+                                                action = new QAction(tr((actionName)),this); \
+                                                action->setShortcut( (shortcut) ); \
+                                                 action->setStatusTip(tr( (statusTip) ) ), \
+                                                connect(action,SIGNAL( signal),this,SLOT( slot) );
+//notice that connect is a macro used by Qt , so signal and slot do not need to
+//add parentheses.
+
 /**
 *the constructor of MainWindow
 *create an empty sheet called "未命名"
@@ -84,10 +95,8 @@ void MainWindow::createActions()
 */
 void MainWindow::createFileActions()
 {
-    newAction = new QAction(tr("&新建"),this);
-    newAction->setShortcut(QKeySequence::New);
-    newAction->setStatusTip(tr("新建文件"));
-    connect(newAction,SIGNAL(triggered()),this,SLOT(newFile()));
+    createAction(newAction,"&新建",QKeySequence::New,"新建文件",triggered(),newFile());
+
     openAction = new QAction(tr("&打开"),this);
     openAction->setShortcut(QKeySequence::Open);
     openAction->setStatusTip(tr("打开文件"));
@@ -181,9 +190,11 @@ void MainWindow::createEditActions()
     selectAllAction->setStatusTip(tr("选择所有单元格"));
     connect(selectAllAction,SIGNAL(triggered()),sheet,SLOT(selectAll()));
 }
-
+/**
+ *create option actions
+ *showGrid,defaultAlignment,autoResize,autoSave,autoTip,show/hideMainToolBar
+ */
 void MainWindow::createOptionActions()
-//showGrid,defaultAlignment,autoResize,autoSave,autoTip,show/hideMainToolBar
 {
     showGridAction = new QAction(tr("&显示边线"),this);
     showGridAction->setCheckable(true);
@@ -333,7 +344,6 @@ void MainWindow::createRecentFileActions()
         connect(recentFileActions[i],SIGNAL(triggered()),
             this,SLOT(openRecentFile()));
     }
-
 }
 /**
 *create SubMenus

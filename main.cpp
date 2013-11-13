@@ -3,11 +3,10 @@
 *EasyTable 's main() is here
 */
 
-//Qt 4.8.4
+//created with Qt 4.8.4 , encoding is
 #include "mainwidget.h"
 #include <QApplication>
 #include <QTextCodec>
-
 /**
 *I bet you know what is main function
 */

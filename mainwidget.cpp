@@ -11,6 +11,7 @@
 #include "mainwidget.h"
 #include "mainwindow.h"
 
+#include <typeinfo>
 #include <QAction>
 #include <QMenu>
 #include <QMdiSubWindow>
@@ -34,6 +35,7 @@ MainWidget::MainWidget(QWidget *parent) :
     setCentralWidget(mdiArea);
     setView();
     createNewMainWindow();
+    this->showNormal();// a trick to let the initial performance look better
     ifCloseCancell = false;
 }
 /**
@@ -47,6 +49,7 @@ void MainWidget::setCurrentWindow()
     curSubWindow = mdiArea->addSubWindow(curWindow);
     connectSignalAndSlots(curWindow);
     curWindow->setFocus();
+    this->showNormal();// a trick to let the initial performance look better
 }
 /**
 *create actions in MainWidget
@@ -127,7 +130,7 @@ void MainWidget::connectSignalAndSlots(MainWindow *curWindow)
     connect(curWindow,SIGNAL(closeSubWindow()),this,SLOT(closeSubWindow()));
     connect(curWindow,SIGNAL(showToolBar()),this,SLOT(showToolBar()));
     connect(curWindow,SIGNAL(hideToolBar()),this,SLOT(hideToolBar()));
-    connect(curWindow,SIGNAL(closeCancelled()),this,SLOT(setCloseCancelled()));
+    connect(curWindow,SIGNAL(closeCancelled()),this,SLOT(closeCancelled()));
 }
 /**
 *create new MainWindow
@@ -200,6 +203,8 @@ void MainWidget::closeSubWindow()
 //    }
     if(mdiArea->currentSubWindow())
         curSubWindow = mdiArea->currentSubWindow();
+    if(mdiArea->subWindowList().size() == 0 || !mdiArea->currentSubWindow() )
+        this->closeAllWindow();
 }
 /**
 *update recentFile actions
@@ -340,7 +345,7 @@ void MainWidget::initialRecentFilesActions()
 *set ifCloseCancell to true
 *when close action is cancelled
 */
-void MainWidget::setCloseCancelled()
+void MainWidget::closeCancelled()
 {
     ifCloseCancell = true;
 }

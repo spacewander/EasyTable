@@ -5,7 +5,6 @@
 #include <QRegExp>
 #include <QRegExpValidator>
 #include <QLayout>
-
 /**
 *the constructor of GotoCellDialog
 */

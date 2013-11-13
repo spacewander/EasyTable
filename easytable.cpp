@@ -812,6 +812,21 @@ void EasyTable::displayResults()
     }
 }
 /**
+ *basic find method
+ */
+bool EasyTable::_find(int row,int column,const QString &str, Qt::CaseSensitivity cs)
+{
+    if(text(row,column).contains(str,cs))
+    {
+        clearSelection();
+        setCurrentCell(row,column);
+        activateWindow();
+        return true;
+    }
+    return false;
+}
+
+/**
 *find from the begin of file to the end of file
 */
 void EasyTable::findInAll(const QString &str, Qt::CaseSensitivity cs)
@@ -822,13 +837,8 @@ void EasyTable::findInAll(const QString &str, Qt::CaseSensitivity cs)
     {
         while(column<ColumnCount)
         {
-            if(text(row,column).contains(str,cs))
-            {
-                clearSelection();
-                setCurrentCell(row,column);
-                activateWindow();
+            if(_find(row,column,str,cs) )
                 return;
-            }
             column++;
         }
         column = 0;
@@ -849,13 +859,8 @@ void EasyTable::findFromHere(const QString &str, Qt::CaseSensitivity cs)
     {
         while(column<ColumnCount)
         {
-            if(text(row,column).contains(str,cs))
-            {
-                clearSelection();
-                setCurrentCell(row,column);
-                activateWindow();
-                return;
-            }
+            if(_find(row,column,str,cs) )
+                    return;
             column++;
         }
         column = 0;
@@ -868,13 +873,8 @@ void EasyTable::findFromHere(const QString &str, Qt::CaseSensitivity cs)
     {
         while(column<ColumnCount || (row == currentRow() && column <= currentColumn()))
         {
-            if(text(row,column).contains(str,cs))
-            {
-                clearSelection();
-                setCurrentCell(row,column);
-                activateWindow();
+            if(_find(row,column,str,cs) )
                 return;
-            }
             column++;
         }
         column = 0;
@@ -895,13 +895,8 @@ void EasyTable::findNext(const QString &str, Qt::CaseSensitivity cs)
     {
         while(column<ColumnCount)
         {
-            if(text(row,column).contains(str,cs))
-            {
-                clearSelection();
-                setCurrentCell(row,column);
-                activateWindow();
+            if(_find(row,column,str,cs) )
                 return;
-            }
             column++;
         }
         column = 0;
@@ -923,13 +918,8 @@ void EasyTable::findPrevious(const QString &str, Qt::CaseSensitivity cs)
     {
         while(column >= 0)
         {
-            if(text(row,column).contains(str,cs))
-            {
-                clearSelection();
-                setCurrentCell(row,column);
-                activateWindow();
+            if(_find(row,column,str,cs) )
                 return;
-            }
             column--;
         }
         column = ColumnCount-1;
