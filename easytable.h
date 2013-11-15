@@ -37,16 +37,64 @@ public:
     void setBackgroundColor(QColor &backgroundColor);
     void setGrid(Qt::PenStyle &gridStyle);
 
+    /**
+     * @brief getDefaultAlignment
+     * @return bool
+     */
     bool getDefaultAlignment()const{return defaultAlignment;}
+    /**
+     * @brief autoRecalculate
+     * @return bool
+     */
     bool autoRecalculate() const{return autoRecalc;}
+    /**
+     * @brief getAutoResize
+     * @return bool
+     */
     bool getAutoResize() const{return autoResize;}
+    /**
+     * @brief getAutoTip
+     * @return bool
+     */
     bool getAutoTip() const{return autoTip;}
+    /**
+     * @brief setAutoTip
+     *set autoTip with the bool param
+     * @param ok
+     */
     void setAutoTip(bool ok) {autoTip = ok;}
+    /**
+     * @brief getTipDirty
+     * @return bool
+     */
     bool getTipDirty() const{return tipDirty;}
+    /**
+     * @brief setTipDirty
+     *set tipDirty with the bool param
+     * @param ok
+     */
     void setTipDirty(bool ok) {tipDirty = ok;}
 
+    /**
+     * @brief getRowCount
+     * @return the total number of rows
+     */
     int getRowCount()const{return RowCount;}
+    /**
+     * @brief getColumnCount
+     * @return the total number of columns
+     */
     int getColumnCount()const{return ColumnCount;}
+    /**
+     * @brief getWidth
+     * @return the width of the selected column
+     */
+    int getWidth() const {return Width;}
+    /**
+     * @brief getHeight
+     * @return the height of the selected row
+     */
+    int getHeight() const {return Height;}
     void getColumnContext(int column,QSet<QString> &strSet,QVector<int> &maxRow);
 
     QMap<QString,int> tipMap;/// key is the text of cell,value is the column of cell
@@ -79,14 +127,10 @@ public slots:
     void setAutoRecalculate(bool recalc);
     void setAutoResize(bool resize);
 
-    void findNext(const QString &str,Qt::CaseSensitivity cs);
-    void findPrevious(const QString &str,Qt::CaseSensitivity cs);
-    void findInAll(const QString &str,Qt::CaseSensitivity cs);
-    void findFromHere(const QString &str,Qt::CaseSensitivity cs);
-    void replaceSelectedCell(const QString&str);
+    QString text(int row,int column) const;
 
     void setDefaultAlignment(bool ok);
-    QTextDocument* getContextForPrint();//get context for print
+    QTextDocument* getContextForPrint();/// get context for print
 
     void useFunction();
 
@@ -101,7 +145,6 @@ private:
     int RowCount,ColumnCount;/// decide the range of a sheet
 
     Cell* cell(int row,int column) const;
-    QString text(int row,int column) const;
     QString formula(int row,int column) const;
     void setFormula(int row,int column,const QString &formula);
 
@@ -130,8 +173,6 @@ private:
     double sum,average;
     Function getFunctionCode();
     void displayResults();
-
-    bool _find(int row,int column,const QString &str, Qt::CaseSensitivity cs);
 
     void functionCount();
     void functionSum();

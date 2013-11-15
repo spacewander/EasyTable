@@ -15,6 +15,7 @@ class QIcon;
 class FindDialog;
 class EasyTable;
 class GotoCellDialog;
+class Find;
 
 class MainWindow : public QMainWindow
 {
@@ -118,6 +119,7 @@ private:
 
     EasyTable *sheet;
     FindDialog *findDialog;
+    Find *findController;
     GotoCellDialog *toCell;
     QVector<int> maxRow;
     QMap<QString,int> tipMap;/// key is the text of cell,value is the column of cell

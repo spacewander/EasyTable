@@ -23,6 +23,7 @@
 #include <QTableWidget>
 #include <QTextDocument>
 #include <QTextStream>
+
 /**
 *the constructor of EasyTable
 */
@@ -194,6 +195,7 @@ void EasyTable::somethingChanged()
         recalculate();
     emit modified();
 }
+
 /**
 *write file back to hard disk
 */
@@ -423,6 +425,7 @@ bool EasyTable::readFile(const QString &fileName)
     QApplication::restoreOverrideCursor();
     return true;
 }
+
 /**
 *prepare file context for printing
 */
@@ -480,6 +483,7 @@ void EasyTable::resizeCell(QTableWidgetItem *item)
     }
     cellSizeChange(row,column,width,height);
 }
+
 /**
 *cut text
 */
@@ -555,6 +559,7 @@ void EasyTable::del()
         somethingChanged();
     }
 }
+
 /**
 *insert row
 */
@@ -666,6 +671,7 @@ void EasyTable::selectCurrentColumn()
 {
     selectColumn(currentColumn());
 }
+
 /**
 *use functions to handle the data
 */
@@ -811,132 +817,7 @@ void EasyTable::displayResults()
         break;
     }
 }
-/**
- *basic find method
- */
-bool EasyTable::_find(int row,int column,const QString &str, Qt::CaseSensitivity cs)
-{
-    if(text(row,column).contains(str,cs))
-    {
-        clearSelection();
-        setCurrentCell(row,column);
-        activateWindow();
-        return true;
-    }
-    return false;
-}
 
-/**
-*find from the begin of file to the end of file
-*/
-void EasyTable::findInAll(const QString &str, Qt::CaseSensitivity cs)
-{
-    int row = 0;
-    int column = 0;
-    while(row<RowCount)
-    {
-        while(column<ColumnCount)
-        {
-            if(_find(row,column,str,cs) )
-                return;
-            column++;
-        }
-        column = 0;
-        row++;
-    }
-    QApplication::beep();
-    QMessageBox::information(this,tr("查找"),tr("查找结束,没有找到"
-                                              "<pre>     %1 </pre>").arg(str));
-}
-/**
-*find from here and search the whole file
-*/
-void EasyTable::findFromHere(const QString &str, Qt::CaseSensitivity cs)
-{
-    int row = currentRow();
-    int column = currentColumn()+1;
-    while(row<RowCount)
-    {
-        while(column<ColumnCount)
-        {
-            if(_find(row,column,str,cs) )
-                    return;
-            column++;
-        }
-        column = 0;
-        row++;
-    }
-    //go back to search again
-    row = 0;
-    column = 0;
-    while(row<currentRow())
-    {
-        while(column<ColumnCount || (row == currentRow() && column <= currentColumn()))
-        {
-            if(_find(row,column,str,cs) )
-                return;
-            column++;
-        }
-        column = 0;
-        row++;
-    }
-    QApplication::beep();
-    QMessageBox::information(this,tr("查找"),tr("查找结束,没有找到"
-                                              "<pre>    %1 </pre>").arg(str));
-}
-/**
-*find forward
-*/
-void EasyTable::findNext(const QString &str, Qt::CaseSensitivity cs)
-{
-    int row = currentRow();
-    int column = currentColumn()+1;
-    while(row<RowCount)
-    {
-        while(column<ColumnCount)
-        {
-            if(_find(row,column,str,cs) )
-                return;
-            column++;
-        }
-        column = 0;
-        row++;
-    }
-    QApplication::beep();
-    QMessageBox::information(this,tr("查找"),tr("向后查找结束,没有找到"
-                                              "<pre>    %1 </pre>"
-                                              "如需继续查找,请使用向前查找").arg(str));
-}
-/**
-*find backward
-*/
-void EasyTable::findPrevious(const QString &str, Qt::CaseSensitivity cs)
-{
-    int row = currentRow();
-    int column = currentColumn()-1;
-    while(row >= 0)
-    {
-        while(column >= 0)
-        {
-            if(_find(row,column,str,cs) )
-                return;
-            column--;
-        }
-        column = ColumnCount-1;
-        row--;
-    }
-    QApplication::beep();
-    QMessageBox::information(this,tr("查找"),tr("向前查找结束,没有找到"
-                                              "<pre>    %1 </pre>"
-                                              "如需继续查找,请使用向后查找").arg(str));
-}
-/**
-*replace the context of the cell found
-*/
-void EasyTable::replaceSelectedCell(const QString &str)
-{
-    finish(str);
-}
 /**
 *recalculate all formula
 */
@@ -1004,6 +885,7 @@ void EasyTable::setDefaultAlignment(bool ok)
     }//end else
     QApplication::restoreOverrideCursor();
 }
+
 /**
 *sort
 */
@@ -1155,6 +1037,7 @@ void EasyTable::setGrid(Qt::PenStyle &gridStyle)
 {
     setGridStyle(gridStyle);
 }
+
 /**
 *change the size of cell if need
 */

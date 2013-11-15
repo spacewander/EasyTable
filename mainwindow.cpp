@@ -42,6 +42,7 @@
 #include "gotocelldialog.h"
 #include "mainwindow.h"
 #include "sortdialog.h"
+#include "find.h"
 
 //to use macro above just want to show another way to implement a new action
 //But I think macro is not recomendable to use here
@@ -345,6 +346,7 @@ void MainWindow::createRecentFileActions()
             this,SLOT(openRecentFile()));
     }
 }
+
 /**
 *create SubMenus
 */
@@ -601,6 +603,7 @@ void MainWindow::createStatusBar()
     connect(sheet,SIGNAL(modified()),this,SLOT(sheetModified()));
     updateStatusBar();
 }
+
 /**
 *updateStatusBar
 */
@@ -803,6 +806,7 @@ void MainWindow::closeWindow()
         emit closeSubWindow();
     //avoid the SubWindow checks whether the window has been modified.
 }
+
 /**
 *use click left button of mouse to show the toolBar in MainWidget
 *in some special area
@@ -910,31 +914,49 @@ void MainWindow::closeAllWindow()
 */
 void MainWindow::find()
 {
-    if(!findDialog)
+    findController = new Find(sheet);
+    if(!findDialog || !findController->isAble())
     {
         findDialog = new FindDialog(this);
+//find with normal string
         connect(findDialog,SIGNAL(findNext(const QString&,
             Qt::CaseSensitivity)),
-            sheet,SLOT(findNext(const QString&,
+            findController,SLOT(findNext(const QString&,
             Qt::CaseSensitivity)));
 
         connect(findDialog,SIGNAL(findPrevious(const QString&,
             Qt::CaseSensitivity)),
-            sheet,SLOT(findPrevious(const QString&,
+            findController,SLOT(findPrevious(const QString&,
             Qt::CaseSensitivity)));
 
         connect(findDialog,SIGNAL(findInAll(const QString&,
             Qt::CaseSensitivity)),
-            sheet,SLOT(findInAll(const QString&,
+            findController,SLOT(findInAll(const QString&,
             Qt::CaseSensitivity)));
 
         connect(findDialog,SIGNAL(findFromHere(const QString&,
             Qt::CaseSensitivity)),
-            sheet,SLOT(findFromHere(const QString&,
+            findController,SLOT(findFromHere(const QString&,
             Qt::CaseSensitivity)));
 
+// find with regex
+        connect(findDialog,SIGNAL(findNextRE(const QRegExp &)),
+            findController,SLOT(findNext(const QRegExp &)));
+
+        connect(findDialog,SIGNAL(findPreviousRE(const QRegExp &)),
+            findController,SLOT(findPrevious(const QRegExp &)));
+
+        connect(findDialog,SIGNAL(findInAllRE(const QRegExp &)),
+            findController,SLOT(findInAll(const QRegExp &)));
+
+        connect(findDialog,SIGNAL(findFromHereRE(const QRegExp &)),
+            findController,SLOT(findFromHere(const QRegExp &)));
+
+
         connect(findDialog,SIGNAL(replaceSelectedCell(const QString&)),
-                sheet,SLOT(replaceSelectedCell(const QString&)));
+                findController,SLOT(replaceSelectedCell(const QString&)));
+
+        connect(findController,SIGNAL(matched()),findDialog,SLOT(match()));
     }
     findDialog->setWindowOpacity(1.0);
     findDialog->show();
@@ -1000,6 +1022,7 @@ void MainWindow::sort()
         }
     }
 }
+
 /**
 *show sheet`s grid
 *associated with the namesake method of EasyTable
@@ -1172,6 +1195,7 @@ void MainWindow::setBackgroundColor()
         setWindowModified(false);
     }
 }
+
 /**
 *hide rows do not contain particular contexts
 */
@@ -1217,6 +1241,7 @@ void MainWindow::about()
            "<br/>"
         "<em>Copyleft &copy; BugMore Software Inc.</em>"));
 }
+
 /**
 *write settings
 *contain
@@ -1258,6 +1283,7 @@ void MainWindow::readSettings()
     bool autoSave = settings.value("autoSave",false).toBool();
     autoSaveAction->setChecked(autoSave);
 }
+
 /**
 *create smart tips
 */
@@ -1447,6 +1473,7 @@ void MainWindow::createTipToolBarActions(int column, QString str)
         ++it;
     }//end for create actions
 }
+
 /**
 *fill in selected cell with particular text
 *called by tipToolBar`s actions
