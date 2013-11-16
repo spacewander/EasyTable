@@ -20,7 +20,8 @@ SOURCES += main.cpp\
     sortdialog.cpp \
     mainwidget.cpp \
     easytablecompare.cpp \
-    find.cpp
+    find.cpp \
+    helpsearchdialog.cpp
 
 HEADERS  += mainwindow.h \
     finddialog.h \
@@ -30,7 +31,8 @@ HEADERS  += mainwindow.h \
     sortdialog.h \
     mainwidget.h \
     easytablecompare.h \
-    find.h
+    find.h \
+    helpsearchdialog.h
 
 FORMS += \
     sortdialog.ui

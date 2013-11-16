@@ -12,6 +12,10 @@
 #include <QApplication>
 #include <QRegExp>
 
+/**
+ * the constructor of Find
+ * @param a EasyTable instance as the base of it and the recevier of it
+ */
 Find::Find(EasyTable *parent) :
     QObject(parent),parent(parent)
 {

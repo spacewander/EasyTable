@@ -16,6 +16,7 @@ class FindDialog;
 class EasyTable;
 class GotoCellDialog;
 class Find;
+class HelpSearchDialog;
 
 class MainWindow : public QMainWindow
 {
@@ -61,7 +62,9 @@ private slots:
     void find();
     void goToCell();
     void sort();
+
     void about();
+    void helpSearch();
 
     void setFont();
     void setTextColor();
@@ -84,6 +87,8 @@ private slots:
     void cancellGroupBy();
     void finishCell();
 
+     void triggerMenu(QString& str);
+
 private:
     void createActions();
     void createRecentFileActions();
@@ -101,6 +106,9 @@ private:
     void createStatusBar();
     void createGroupByToolBarView();
     void createTipToolBarView();
+
+    QStringList& listActions();
+    void searchActions(QMenu *menu, QStringList& list,QString topMenuName = "");
 
     void readSettings();
     void writeSettings();
@@ -121,6 +129,9 @@ private:
     FindDialog *findDialog;
     Find *findController;
     GotoCellDialog *toCell;
+    HelpSearchDialog *helpDialog;
+    QStringList actionList;
+
     QVector<int> maxRow;
     QMap<QString,int> tipMap;/// key is the text of cell,value is the column of cell
 
@@ -212,6 +223,7 @@ private:
     QAction *hideMainToolBarAction;
 
     QAction *aboutAction;
+    QAction *helpSearchActon;
 
     QAction *solidGridStyleAction;
     QAction *dotGridStyleAction;

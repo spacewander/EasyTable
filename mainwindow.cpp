@@ -8,6 +8,7 @@
 *the MainWindow contains menubar,toolBar,and statusBar and so on
 *it is controller of almost all the functions
 */
+#include <iostream>//for test
 #include <QCheckBox>
 #include <QColorDialog>
 #include <QCloseEvent>
@@ -31,6 +32,7 @@
 
 #include <QSettings>
 #include <QStatusBar>
+#include <QStringList>
 #include <QTableWidgetSelectionRange>
 #include <QTimer>
 #include <QTextDocument>
@@ -43,6 +45,7 @@
 #include "mainwindow.h"
 #include "sortdialog.h"
 #include "find.h"
+#include "helpsearchdialog.h"
 
 //to use macro above just want to show another way to implement a new action
 //But I think macro is not recomendable to use here
@@ -73,6 +76,7 @@ MainWindow::MainWindow(QWidget *parent)
     createToolBars();
     readSettings();
     findDialog = nullptr;
+    helpDialog = nullptr;
     tipToolBar = nullptr;
     tipMap = sheet->tipMap;
     setCurrentFile(tr("未命名"));
@@ -320,6 +324,9 @@ void MainWindow::createOtherActions()
     aboutAction = new QAction(tr("&关于"),this);
     aboutAction->setStatusTip(tr("关于我们"));
     connect(aboutAction,SIGNAL(triggered()),this,SLOT(about()));
+    helpSearchActon = new QAction(tr("帮助搜索"),this);
+    helpSearchActon->setStatusTip(tr("帮助搜索"));
+    connect(helpSearchActon,SIGNAL(triggered()),this,SLOT(helpSearch()));
 
     noneGridStyleAction = new QAction(tr("无边线"),this);
     connect(noneGridStyleAction,SIGNAL(triggered()),this,SLOT(hideGrid()));
@@ -395,6 +402,7 @@ void MainWindow::createSubMenus()
         recentFilesSubMenu->addAction(recentFileActions[i]);
     }
 }
+
 /**
 *create Menus
 */
@@ -424,7 +432,7 @@ void MainWindow::createMenus()
     fileMenu->addSeparator();
 
     fileMenu->addAction(exitAction);
-
+    searchActions(fileMenu,actionList);
     editMenu = menuBar()->addMenu(tr("编辑"));
     editMenu->setCursor(QCursor(Qt::PointingHandCursor));
     editMenu->addAction(cutAction);
@@ -440,7 +448,7 @@ void MainWindow::createMenus()
     editMenu->addAction(hideSubMenu->menuAction());
     editMenu->addSeparator();
     editMenu->addAction(showHiddenRangesAction);
-
+    searchActions(editMenu,actionList);
     toolsMenu = menuBar()->addMenu(tr("工具"));
     toolsMenu->setCursor(QCursor(Qt::PointingHandCursor));
     toolsMenu->addAction(sortAction);
@@ -449,7 +457,7 @@ void MainWindow::createMenus()
     toolsMenu->addAction(groupByAction);
     toolsMenu->addAction(hideGroupByAction);
     hideGroupByAction->setVisible(false);
-
+    searchActions(toolsMenu,actionList);
     optionsMenu = menuBar()->addMenu(tr("选项"));
     optionsMenu->setCursor(QCursor(Qt::PointingHandCursor));
     optionsMenu->addAction(showGridAction);
@@ -459,13 +467,16 @@ void MainWindow::createMenus()
     optionsMenu->addAction(autoTipAction);
     optionsMenu->addAction(showMainToolBarAction);
     optionsMenu->addAction(hideMainToolBarAction);
-
+    searchActions(optionsMenu,actionList);
     menuBar()->addSeparator();
 
     helpMenu = menuBar()->addMenu(tr("帮助"));
     helpMenu->setCursor(QCursor(Qt::PointingHandCursor));
     helpMenu->addAction(aboutAction);
+    helpMenu->addAction(helpSearchActon);
+    searchActions(helpMenu,actionList);
 }
+
 /**
 *createContextMenu
 */
@@ -485,6 +496,7 @@ void MainWindow::createContextMenu()
     sheet->addAction(hideSubMenu->menuAction());
     sheet->setContextMenuPolicy(Qt::ActionsContextMenu);
 }
+
 /**
 *createToolBars
 */
@@ -620,6 +632,7 @@ void MainWindow::sheetModified()
     setWindowModified(true);
     updateStatusBar();
 }
+
 /**
 *allow autoSave
 */
@@ -653,6 +666,7 @@ void MainWindow::saveAfterTimeInterval()
         timer = nullptr;
     }
 }
+
 /**
 *new file
 */
@@ -722,6 +736,7 @@ bool MainWindow::loadFile(const QString &fileName)
     statusBar()->showMessage(str,2000);
     return true;
 }
+
 /**
 *save
 */
@@ -767,6 +782,7 @@ bool MainWindow::saveAs()
     }
     return saveFile(fileName);
 }
+
 /**
 *print
 */
@@ -780,6 +796,7 @@ void MainWindow::print()
         text->print(&printer);
     }
 }
+
 /**
 *when close action happens,call it
 */
@@ -963,6 +980,7 @@ void MainWindow::find()
     findDialog->raise();
     findDialog->activateWindow();
 }
+
 /**
 *use gotocelldialog
 */
@@ -981,6 +999,7 @@ void MainWindow::goToCell()
     }
     delete dialog;
 }
+
 /**
 *use SortDialog
 */
@@ -1068,6 +1087,7 @@ void MainWindow::setSolidGrid()
     Qt::PenStyle style = Qt::SolidLine;
     sheet->setGrid(style);
 }
+
 /**
 *set font of cell
 *by calling the setFont() of EasyTable
@@ -1086,6 +1106,7 @@ void MainWindow::setFont()
        sheet->setFont(font);
     }
 }
+
 /**
 *set left aligned
 *by calling the setAlignment() of EasyTable
@@ -1133,6 +1154,7 @@ void MainWindow::setBottomAlignment()
     int alignmentCode = Qt::AlignBottom | Qt::AlignHCenter;
     sheet->setAlignment(alignmentCode);
 }
+
 /**
 *set the color and shape of icon
 *for the icons in formatToolBar
@@ -1231,6 +1253,7 @@ void MainWindow::cancellGroupBy()
     hideGroupByAction->setVisible(false);
     maxRow.clear();
 }
+
 /**
 *show the version of software
 */
@@ -1240,6 +1263,61 @@ void MainWindow::about()
         tr("<h1>EasyTable 1.0</h1>"
            "<br/>"
         "<em>Copyleft &copy; BugMore Software Inc.</em>"));
+}
+
+void MainWindow::helpSearch()
+{
+    QStringList actionList = listActions();
+    if(!helpDialog)
+    {
+        helpDialog = new HelpSearchDialog(this,actionList);
+        connect(helpDialog,SIGNAL(actionSelected(QString&)),this,
+                SLOT(triggerMenu(QString&)));
+    }
+    helpDialog->show();
+    helpDialog->raise();
+    helpDialog->activateWindow();
+}
+QStringList& MainWindow::listActions()
+{
+  //to-do
+    /*
+     *遍历menubar
+     *通过searchActionThroughMenu(menu*,actions&)递归遍历menu
+     *使用url拼接actionlist(localMenu + subMenu)
+     *包括menuAction
+     */
+    return actionList;
+}
+
+void MainWindow::triggerMenu(QString &str)
+{
+//to-do
+    /*
+     *使用action url，依次触发，直至最后一个域
+     */
+}
+void MainWindow::searchActions(QMenu* menu, QStringList &list, QString topMenuName)
+{
+    list.append(topMenuName + menu->title());
+    QString s(topMenuName + menu->title() + "/");
+    int len = menu->actions().length();
+    for(int i = 0; i < len; ++i)
+    {
+        if(!(menu->actions())[i]->isSeparator())
+            //if the action is not a separator action
+        {
+            //don`t edit the string of action
+            if( (menu->actions())[i]->menu() != nullptr &&
+                    (menu->actions())[i]->text() != tr("最近打开的文件"))
+                //ignore the subMenu of "最近打开的文件"
+            {
+                searchActions( (menu->actions())[i]->menu(),list,s  );
+            }
+            else
+                list.append(s +  (menu->actions())[i]->text() );
+        }// end if
+    }//end for
 }
 
 /**
