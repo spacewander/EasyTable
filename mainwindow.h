@@ -100,8 +100,16 @@ private:
     void createOtherActions();
 
     void createSubMenus();
+
+    void createFileMenus();
+    void createEditMenus();
+    void createToolsMenus();
+    void createOptionsMenus();
+    void createHelpMenus();
     void createMenus();
+
     void createContextMenu();
+
     void createToolBars();
     void createStatusBar();
     void createGroupByToolBarView();
@@ -109,6 +117,8 @@ private:
 
     QStringList& listActions();
     void searchActions(QMenu *menu, QStringList& list,QString topMenuName = "");
+    void triggerActions(QMenu *menu,QStringList& list,int level);
+    void popupMenu(QMenu *menu, QPoint location = QPoint(0,0) );
 
     void readSettings();
     void writeSettings();

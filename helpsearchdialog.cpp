@@ -51,55 +51,88 @@ HelpSearchDialog::HelpSearchDialog(QWidget *parent, QStringList &strList) :
     item->setText(tr("功能名"));
     table->setHorizontalHeaderItem(0,item);
 
-    int len = actionList.length();
-    for(int i = 0; i < len; ++i)
+   // int len = actionList.length();
+   /* for(int i = 0; i < len; ++i)
     {
         setTable(i,actionList.at(i));
     }
-
+*/
     connect(okButton,SIGNAL(clicked()),this,SLOT(demoAction()));
     connect(cancelButton,SIGNAL(clicked()),this,SLOT(close()));
-    connect(lineEdit,SIGNAL(textChanged(const QString& )),this,
-            SLOT(changeActionList(const QString&)));
+    connect(lineEdit,SIGNAL(textChanged(QString)),this,
+            SLOT(changeActionList(QString)));
 }
 
-void HelpSearchDialog::changeActionList(const QString &str)
+/**
+ * change the list in table while the text in lineEdit has changed and is valid
+ * @param QString str
+ */
+void HelpSearchDialog::changeActionList(QString str)
 {
+    if(str.isEmpty() || str == "/")
+        return;
+    QStringList strList = str.split(" ");    //replace all blank
+    okButton->setEnabled(true);
     int i = 0;
-    for(auto it = actionList.constBegin(); it != actionList.constEnd(); ++it)
+    auto constEnd = actionList.constEnd();
+    bool ok = true;
+    for(auto it = actionList.constBegin(); it != constEnd; ++it)
     {
-        if((*it).contains(str))
+        for(auto strIt = strList.constBegin(); strIt != strList.constEnd(); ++strIt)
+        {
+            if( !(*it).contains(*strIt) )
+            {
+                ok = false;
+                break;
+            }
+        }
+        if(ok)
         {
             setTable(i,*it);
             ++i;
         }
+        ok = true;
     }
-    while(i < table->rowCount())
+    while(i < ITEMS)
     {
         setTable(i,"");
         ++i;
     }
 }
-//to-do
-/*
- *使用储存action列表
- *调用triggerMenu显示匹配的action
- *通过点击来选择(默认第一个)
- *发射action的url
+/**
+ * select the target in table and emit its text
  */
 void HelpSearchDialog::demoAction()
 {
-   // triggerMenu();
+    QTableWidgetSelectionRange selectRange;
+    QList<QTableWidgetSelectionRange> ranges = table->selectedRanges();
+    if(!ranges.isEmpty())
+         selectRange = ranges.first();
+    QString str = "";
+    QTableWidgetItem *item = table->item(selectRange.topRow(),selectRange.leftColumn());
+    if(item != nullptr)
+        str = item->text();
+    triggerMenu(str);
 }
-
+/**
+ * simply emit the string to trigger selected Menu
+ * @param QString str
+ */
 void HelpSearchDialog::triggerMenu(QString &str)
 {
+    this->close();
     emit actionSelected(str);
 }
-
+/**
+ * set the value of table in specular row with text.
+ * Change the cell of table to uneditable
+ * @param int row
+ * @param QString s
+ */
 void HelpSearchDialog::setTable(int row, const QString &s)
 {
     QTableWidgetItem *item2 = new QTableWidgetItem;
     item2->setText(s);
+    item2->setFlags(item2->flags() ^ Qt::ItemIsEditable);//make it unable to edit
     table->setItem(row,0,item2);
 }

@@ -356,6 +356,7 @@ void MainWindow::createRecentFileActions()
 
 /**
 *create SubMenus
+*alignment,insert,choose,format,remove,hide,gridStyle
 */
 void MainWindow::createSubMenus()
 {
@@ -411,7 +412,20 @@ void MainWindow::createMenus()
     menuBar()->adjustSize();
     menuBar()->setMinimumHeight(20);
     createSubMenus();
+    createFileMenus();
+    createEditMenus();
+    createToolsMenus();
+    createOptionsMenus();
+    menuBar()->addSeparator();
 
+    createHelpMenus();
+}
+
+/**
+ *create fileMenu
+ */
+void MainWindow::createFileMenus()
+{
     fileMenu = menuBar()->addMenu(tr("文件"));
     fileMenu->setCursor(QCursor(Qt::PointingHandCursor));
     fileMenu->addAction(newAction);
@@ -433,6 +447,12 @@ void MainWindow::createMenus()
 
     fileMenu->addAction(exitAction);
     searchActions(fileMenu,actionList);
+}
+/**
+ * createEditMenus
+ */
+void MainWindow::createEditMenus()
+{
     editMenu = menuBar()->addMenu(tr("编辑"));
     editMenu->setCursor(QCursor(Qt::PointingHandCursor));
     editMenu->addAction(cutAction);
@@ -449,6 +469,12 @@ void MainWindow::createMenus()
     editMenu->addSeparator();
     editMenu->addAction(showHiddenRangesAction);
     searchActions(editMenu,actionList);
+}
+/**
+ * createToolsMenus
+ */
+void MainWindow::createToolsMenus()
+{
     toolsMenu = menuBar()->addMenu(tr("工具"));
     toolsMenu->setCursor(QCursor(Qt::PointingHandCursor));
     toolsMenu->addAction(sortAction);
@@ -458,6 +484,12 @@ void MainWindow::createMenus()
     toolsMenu->addAction(hideGroupByAction);
     hideGroupByAction->setVisible(false);
     searchActions(toolsMenu,actionList);
+}
+/**
+ * createOptionsMenus
+ */
+void MainWindow::createOptionsMenus()
+{
     optionsMenu = menuBar()->addMenu(tr("选项"));
     optionsMenu->setCursor(QCursor(Qt::PointingHandCursor));
     optionsMenu->addAction(showGridAction);
@@ -468,8 +500,12 @@ void MainWindow::createMenus()
     optionsMenu->addAction(showMainToolBarAction);
     optionsMenu->addAction(hideMainToolBarAction);
     searchActions(optionsMenu,actionList);
-    menuBar()->addSeparator();
-
+}
+/**
+ * createHelpMenus
+ */
+void MainWindow::createHelpMenus()
+{
     helpMenu = menuBar()->addMenu(tr("帮助"));
     helpMenu->setCursor(QCursor(Qt::PointingHandCursor));
     helpMenu->addAction(aboutAction);
@@ -550,6 +586,7 @@ void MainWindow::createToolBars()
     alignmentToolBar->addAction(bottomAlignmentAction);
     alignmentToolBar->addSeparator();
 }
+
 /**
 *createGroupByToolBar
 */
@@ -595,6 +632,7 @@ void MainWindow::createGroupByToolBarView()
     groupByToolBar->setMovable(false);
     groupByToolBar->setFloatable(false);
 }
+
 /**
 *createStatusBar
 */
@@ -1265,6 +1303,9 @@ void MainWindow::about()
         "<em>Copyleft &copy; BugMore Software Inc.</em>"));
 }
 
+/**
+ * the implementation of helpSearch function
+ */
 void MainWindow::helpSearch()
 {
     QStringList actionList = listActions();
@@ -1278,27 +1319,62 @@ void MainWindow::helpSearch()
     helpDialog->raise();
     helpDialog->activateWindow();
 }
+/**
+ * return actionList
+ */
 QStringList& MainWindow::listActions()
 {
-  //to-do
-    /*
-     *遍历menubar
-     *通过searchActionThroughMenu(menu*,actions&)递归遍历menu
-     *使用url拼接actionlist(localMenu + subMenu)
-     *包括menuAction
-     */
     return actionList;
 }
+/**
+ * pop up a menu
+ * @param menu
+ */
+void MainWindow::popupMenu(QMenu *menu, QPoint location)
+{
+    if(menu == nullptr)
+        return;
+    menu->exec(
+                menu->mapFromParent(
+                                   location )
+                             );
+                    // is there any better way to trigger a menu in Qt4.8?
+                    //I am glad to be heard one
+}
 
+/**
+ * trigger selected menus
+ * @param QString str(the name of giving menu)
+ */
 void MainWindow::triggerMenu(QString &str)
 {
-//to-do
-    /*
-     *使用action url，依次触发，直至最后一个域
-     */
+    if(!str.contains("/"))
+        return;
+    QStringList actionURL = str.split("/");
+    auto it = actionURL.constBegin();
+    auto endOfActions = this->menuBar()->actions().constEnd();
+    for(auto i = this->menuBar()->actions().constBegin(); i != endOfActions ; ++i)
+    {
+        if((*i)->text() == *it)
+        {
+            popupMenu((*i)->menu());
+            triggerActions((*i)->menu(),actionURL,1);
+            return;
+        }
+    }// actions
+
 }
+/**
+ * search each actions in giving menu and add the location of action (as URL)
+ * to actionList
+ * @param QMenu giving menu
+ * @param QStringList actionList
+ * @param QString topMenuName(to compose a path)
+ */
 void MainWindow::searchActions(QMenu* menu, QStringList &list, QString topMenuName)
 {
+    if(menu == nullptr)
+        return;
     list.append(topMenuName + menu->title());
     QString s(topMenuName + menu->title() + "/");
     int len = menu->actions().length();
@@ -1318,6 +1394,48 @@ void MainWindow::searchActions(QMenu* menu, QStringList &list, QString topMenuNa
                 list.append(s +  (menu->actions())[i]->text() );
         }// end if
     }//end for
+}
+/**
+ * trigger actions recursely
+ * @param the parent menu
+ * @param list contains actions`names
+ * @param level
+ */
+void MainWindow::triggerActions(QMenu *menu, QStringList &list, int level)
+{
+    if(level < 1 || level >= list.length() || menu == nullptr)
+        return;
+
+    QString action = list.at(level);
+    auto const_End = menu->actions().constEnd();
+
+    if(level == list.length() - 1)  //deal with the last action, just highlight it
+    {
+        for(auto i = menu->actions().constBegin(); i != const_End; ++i)
+        {
+            if((*i)->text() == action)
+            {
+                popupMenu(menu);
+                (*i)->activate(QAction::Hover);
+                return;
+            }// end if
+        }// end for
+    }// end if
+    else
+    {
+        for(auto i = menu->actions().constBegin(); i != const_End; ++i)
+            // popup each subMenu
+        {
+            if((*i)->text() == action)
+            {
+                popupMenu(menu);
+                popupMenu((*i)->menu() );
+                ++level;
+                triggerActions((*i)->menu(),list,level);
+                return;
+            }// end if
+        }// end for
+    }// end else
 }
 
 /**

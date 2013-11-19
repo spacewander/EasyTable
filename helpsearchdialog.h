@@ -17,7 +17,7 @@ signals:
     void actionSelected(QString& sender);
 
 public slots:
-    void changeActionList(const QString& str);
+    void changeActionList(QString str);
     void demoAction();
 
 private:
@@ -28,6 +28,7 @@ private:
     QLabel *lineLabel;
     QLabel *textLabel;
     QTableWidget *table;
+    /// the sum of rows in the table
     enum{ITEMS = 12};
 
     void triggerMenu(QString& str);
